@@ -9,7 +9,7 @@ Nombrado `models_orm.py` (no `models.py`) para no chocar con app/domain/models.p
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, Index, text
+from sqlalchemy import CheckConstraint, DateTime, Index, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -40,10 +40,10 @@ class IngestionJob(Base):
     chunks_indexed: Mapped[int | None] = mapped_column(default=None)
     error_message: Mapped[str | None] = mapped_column(default=None)
     job_metadata: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
-    started_at: Mapped[datetime | None] = mapped_column(default=None)
-    completed_at: Mapped[datetime | None] = mapped_column(default=None)
-    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 class EscalationTicket(Base):
@@ -75,9 +75,9 @@ class EscalationTicket(Base):
     status: Mapped[str] = mapped_column(default="PENDING")
     resolution_notes: Mapped[str | None] = mapped_column(default=None)
     resolved_by: Mapped[str | None] = mapped_column(default=None)
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
-    resolved_at: Mapped[datetime | None] = mapped_column(default=None)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
 
 class AgentPrompt(Base):
@@ -86,7 +86,7 @@ class AgentPrompt(Base):
     agent_id: Mapped[str] = mapped_column(primary_key=True)
     content: Mapped[str]
     version: Mapped[int] = mapped_column(default=1)
-    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     updated_by: Mapped[str | None] = mapped_column(default=None)
 
 
@@ -105,9 +105,9 @@ class ApiKey(Base):
     name: Mapped[str]
     scope: Mapped[str]
     is_active: Mapped[bool] = mapped_column(default=True)
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
-    last_used_at: Mapped[datetime | None] = mapped_column(default=None)
-    revoked_at: Mapped[datetime | None] = mapped_column(default=None)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     created_by: Mapped[str | None] = mapped_column(default=None)
 
 
@@ -129,4 +129,4 @@ class DocumentChunk(Base):
     section: Mapped[str | None] = mapped_column(default=None)
     source: Mapped[str]
     text: Mapped[str]
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
