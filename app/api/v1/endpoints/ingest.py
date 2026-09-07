@@ -51,7 +51,7 @@ async def ingest_document(file: UploadFile, db: DbSessionDep, redis: RedisDep, s
 
     job_id = uuid4()
     max_bytes = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
-    upload_dir = Path(settings.UPLOAD_DIR) / str(job_id)
+    upload_dir = Path(settings.UPLOAD_DIR).resolve() / str(job_id)
     upload_dir.mkdir(parents=True, exist_ok=True)
     storage_path = upload_dir / f"document.{extension}"
 
