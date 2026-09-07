@@ -17,6 +17,7 @@ from pathlib import Path
 from uuid import UUID
 
 from redis.asyncio import Redis
+from redis.exceptions import ConnectionError as RedisConnectionError, TimeoutError as RedisTimeoutError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -79,7 +80,14 @@ async def run_worker(settings: Settings) -> None:
     try:
         while True:
             await _beat(redis)
-            item = await redis.blpop([settings.REDIS_INGEST_QUEUE_KEY], timeout=5)
+            try:
+                item = await redis.blpop([settings.REDIS_INGEST_QUEUE_KEY], timeout=2)
+            except (TimeoutError, RedisTimeoutError):
+                continue
+            except RedisConnectionError as exc:
+                logger.warning("ingestion_worker.redis_connection_retry", extra={"error": str(exc)})
+                await asyncio.sleep(1)
+                continue
             if item is None:
                 continue
             _, raw_job_id = item
