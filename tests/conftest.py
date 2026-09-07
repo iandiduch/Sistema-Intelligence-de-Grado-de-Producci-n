@@ -85,7 +85,7 @@ class FakeLLM:
     def program_tool_call(self, message: AIMessage) -> None:
         self._tool_calls.append(message)
 
-    def with_structured_output(self, schema: type) -> _FakeStructuredRunnable:
+    def with_structured_output(self, schema: type, *args: object, **kwargs: object) -> _FakeStructuredRunnable:
         return _FakeStructuredRunnable(self._structured.setdefault(schema, []))
 
     def bind_tools(self, tools: object) -> "FakeLLM":

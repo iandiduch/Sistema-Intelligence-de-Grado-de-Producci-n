@@ -32,7 +32,7 @@ async def invoke_structured_with_retry(
     messages: list[BaseMessage],
     max_attempts: int,
 ) -> SchemaT:
-    structured_llm = llm.with_structured_output(schema)
+    structured_llm = llm.with_structured_output(schema, method="function_calling")
     feedback: str | None = None
 
     async for attempt in AsyncRetrying(

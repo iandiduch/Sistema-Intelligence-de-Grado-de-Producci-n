@@ -6,12 +6,33 @@ distintos (LangGraph gestiona su propio schema internamente, nosotros el nuestro
 """
 
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
 from app.core.config import Settings
+from app.domain.models import ConfidenceLevel, ContactChannel, EscalationType
+from app.schemas.agents import (
+    AcademicAgentOutput,
+    ContactCapture,
+    KnowledgeAgentOutput,
+    Referencia,
+    SupervisorDecision,
+    ValidatorOutput,
+)
 
 _CONNECTION_KWARGS = {"autocommit": True, "row_factory": dict_row}
+_ALLOWED_CHECKPOINT_TYPES = [
+    AcademicAgentOutput,
+    KnowledgeAgentOutput,
+    Referencia,
+    ValidatorOutput,
+    SupervisorDecision,
+    ContactCapture,
+    ConfidenceLevel,
+    EscalationType,
+    ContactChannel,
+]
 
 
 async def build_checkpointer_pool(settings: Settings, timeout: float = 5.0) -> AsyncConnectionPool:
@@ -28,4 +49,5 @@ async def build_checkpointer_pool(settings: Settings, timeout: float = 5.0) -> A
 
 
 def build_checkpointer(pool: AsyncConnectionPool) -> AsyncPostgresSaver:
-    return AsyncPostgresSaver(pool)
+    serde = JsonPlusSerializer(allowed_msgpack_modules=_ALLOWED_CHECKPOINT_TYPES)
+    return AsyncPostgresSaver(pool, serde=serde)
