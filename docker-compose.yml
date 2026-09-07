@@ -100,16 +100,13 @@ services:
       retries: 3
       start_period: 15s
 
-  # Opcional: solo para quien todavia no tenga Phoenix corriendo por su
-  # cuenta. No arranca con `docker compose up`
-  # por default -- requiere `--profile with-phoenix`.
   phoenix:
     image: arizephoenix/phoenix:latest
     ports:
       - "6006:6006"
     volumes:
       - phoenix_data:/mnt/data
-    profiles: ["with-phoenix"]
+    restart: unless-stopped
 
 volumes:
   postgres_data:
