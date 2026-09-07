@@ -1,0 +1,12 @@
+[
+  {
+    "question": "PLACEHOLDER: reemplazar por una pregunta real sobre un documento ya ingestado, ej. '¿Cuando cierra la inscripcion a materias del primer cuatrimestre?'",
+    "expected_source": "PLACEHOLDER: nombre exacto del archivo del que deberia salir la respuesta, ej. 'reglamento_academico.pdf'",
+    "expected_answer_contains": null
+  },
+  {
+    "question": "PLACEHOLDER: otra pregunta real, ej. '¿Cuales son los requisitos para rendir final libre?'",
+    "expected_source": null,
+    "expected_answer_contains": "PLACEHOLDER: fragmento que la respuesta deberia mencionar, ej. 'promedio minimo'"
+  }
+]
