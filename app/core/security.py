@@ -63,16 +63,15 @@ async def get_current_api_key(
 ) -> ApiKey:
     client_ip = _client_ip(request)
 
-    if settings.RATE_LIMIT_ENABLED:
-        rate_limiter: RateLimiter = request.app.state.rate_limiter
-        result = await rate_limiter.check(
-            f"ip:{client_ip}", settings.RATE_LIMIT_ANONYMOUS_PER_MINUTE, settings.RATE_LIMIT_WINDOW_SECONDS
-        )
-        if not result.allowed:
-            logger.warning("rate_limit.ip_exceeded", extra={"ip": client_ip, "path": request.url.path})
-            raise RateLimitExceededError(result.retry_after_seconds)
-
     if raw_key is None:
+        if settings.RATE_LIMIT_ENABLED:
+            rate_limiter: RateLimiter = request.app.state.rate_limiter
+            result = await rate_limiter.check(
+                f"ip:{client_ip}", settings.RATE_LIMIT_ANONYMOUS_PER_MINUTE, settings.RATE_LIMIT_WINDOW_SECONDS
+            )
+            if not result.allowed:
+                logger.warning("rate_limit.ip_exceeded", extra={"ip": client_ip, "path": request.url.path})
+                raise RateLimitExceededError(result.retry_after_seconds)
         logger.warning("auth.missing_key", extra={"ip": client_ip, "path": request.url.path})
         raise AuthenticationError("Falta la API key")
 
@@ -80,6 +79,14 @@ async def get_current_api_key(
     row = await db.execute(select(ApiKey).where(ApiKey.key_hash == key_hash, ApiKey.is_active.is_(True)))
     record = row.scalar_one_or_none()
     if record is None:
+        if settings.RATE_LIMIT_ENABLED:
+            rate_limiter: RateLimiter = request.app.state.rate_limiter
+            result = await rate_limiter.check(
+                f"ip:{client_ip}", settings.RATE_LIMIT_ANONYMOUS_PER_MINUTE, settings.RATE_LIMIT_WINDOW_SECONDS
+            )
+            if not result.allowed:
+                logger.warning("rate_limit.ip_exceeded", extra={"ip": client_ip, "path": request.url.path})
+                raise RateLimitExceededError(result.retry_after_seconds)
         logger.warning("auth.invalid_key", extra={"ip": client_ip, "path": request.url.path})
         raise AuthenticationError("API key invalida")
 
