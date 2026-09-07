@@ -9,7 +9,7 @@ Nombrado `models_orm.py` (no `models.py`) para no chocar con app/domain/models.p
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, Index
+from sqlalchemy import CheckConstraint, Index, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -117,7 +117,7 @@ class DocumentChunk(Base):
     __tablename__ = "document_chunks"
     __table_args__ = (
         CheckConstraint("file_type IN ('pdf','docx','txt','md')", name="ck_document_chunks_file_type"),
-        Index("ix_document_chunks_fts", func.to_tsvector("spanish", "text"), postgresql_using="gin"),
+        Index("ix_document_chunks_fts", text("to_tsvector('spanish', text)"), postgresql_using="gin"),
         Index("ix_document_chunks_document_id", "document_id"),
     )
 
