@@ -216,7 +216,7 @@ async def _process_job(
             if matches:
                 logger.warning(
                     "ingestion_worker.suspicious_content_detected",
-                    extra={"job_id": str(job_id), "filename": job.filename, "patterns": matches},
+                    extra={"job_id": str(job_id), "document_filename": job.filename, "patterns": matches},
                 )
                 raise SuspiciousContentDetectedError(
                     f"El documento {job.filename} fue rechazado: contiene patrones sospechosos de "
@@ -236,12 +236,12 @@ async def _process_job(
                     await index.delete(ids=prev_chunk_ids[i : i + 1000])
                 logger.info(
                     "ingestion_worker.purged_previous_vectors",
-                    extra={"filename": job.filename, "purged_chunks": len(prev_chunk_ids)},
+                    extra={"document_filename": job.filename, "purged_chunks": len(prev_chunk_ids)},
                 )
             except Exception as exc:  # noqa: BLE001 - Resguardo de resiliencia ante fallos de borrado en Pinecone
                 logger.warning(
                     "ingestion_worker.delete_previous_pinecone_vectors_failed",
-                    extra={"filename": job.filename, "error": str(exc)},
+                    extra={"document_filename": job.filename, "error": str(exc)},
                 )
             await session.execute(delete(DocumentChunk).where(DocumentChunk.filename == job.filename))
             await session.flush()
