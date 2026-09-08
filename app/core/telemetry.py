@@ -29,6 +29,7 @@ def setup_telemetry(settings: Settings) -> TracerProvider | None:
         project_name=settings.PHOENIX_PROJECT_NAME,
         endpoint=settings.PHOENIX_COLLECTOR_ENDPOINT,
         auto_instrument=False,
+        batch=True,
     )
     LangChainInstrumentor().instrument(tracer_provider=tracer_provider)
     OpenAIInstrumentor().instrument(tracer_provider=tracer_provider)
