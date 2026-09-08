@@ -400,3 +400,75 @@ async def test_multiturn_chat_after_ticket_creation_resets_and_answers_new_quest
     assert r3["escalation_contact_pending"] is False
     assert r3.get("escalation_ticket_id") is None
 
+
+async def test_escalation_new_query_intent_transitions_to_supervisor_and_resolves(fake_llm, new_thread_id):
+    """Verifica que si el bot está esperando datos de contacto y el usuario hace una nueva
+    pregunta temática, el agente de escalamiento la reconozca como new_query, cancele el
+    escalamiento y transicione inmediatamente al supervisor para responderla en el mismo turno."""
+    from app.schemas.agents import ContactCapture, ContactIntent
+
+    # Turno 1: Entra a escalamiento y pide contacto
+    fake_llm.program_structured(
+        SupervisorDecision,
+        SupervisorDecision(next_agent="escalation_agent", reasoning="no se encontró"),
+    )
+    graph = build_graph(MemorySaver())
+    config = _config(fake_llm, new_thread_id, [{"text": "info", "metadata": {"source": "reglamento.pdf"}}])
+
+    r1 = await graph.ainvoke(
+        {
+            "messages": [HumanMessage(content="¿Cómo rindo libre?")],
+            "thread_id": new_thread_id,
+            "original_question": "¿Cómo rindo libre?",
+            "iteration_count": 0,
+        },
+        config=config,
+    )
+    assert r1["escalation_contact_pending"] is True
+
+    # Turno 2: En vez de dar contacto o decir "no", el usuario hace una NUEVA pregunta temática
+    fake_llm.program_structured(
+        ContactCapture,
+        ContactCapture(is_complete=False, intent=ContactIntent.NEW_QUERY),
+    )
+    fake_llm.program_structured(
+        SupervisorDecision,
+        SupervisorDecision(next_agent="knowledge_agent", reasoning="nueva pregunta sobre inscripción"),
+    )
+    fake_llm.program_structured(
+        KnowledgeAgentOutput,
+        KnowledgeAgentOutput(
+            encontrado_en_contexto=True,
+            nivel_de_confianza=ConfidenceLevel.HIGH,
+            respuesta="Las inscripciones a finales cierran 72 horas antes.",
+            referencias=[],
+        ),
+    )
+    fake_llm.program_structured(
+        ValidatorOutput,
+        ValidatorOutput(
+            es_suficiente=True,
+            requiere_mas_info=False,
+            confianza=ConfidenceLevel.HIGH,
+            razon="responde adecuadamente",
+            respuesta_sintetizada="Las inscripciones a finales cierran 72 horas antes.",
+        ),
+    )
+
+    r2 = await graph.ainvoke(
+        {
+            "messages": [HumanMessage(content="hasta cuando me puedo inscribir en un final ?")],
+            "thread_id": new_thread_id,
+            "original_question": "hasta cuando me puedo inscribir en un final ?",
+            "iteration_count": 0,
+            "escalation_ticket_id": None,
+        },
+        config=config,
+    )
+
+    # Debe haber respondido la nueva pregunta directamente sin pedir email/whatsapp de nuevo
+    assert r2["final_answer"] == "Las inscripciones a finales cierran 72 horas antes."
+    assert r2["escalation_contact_pending"] is False
+    assert r2.get("escalation_ticket_id") is None
+
+

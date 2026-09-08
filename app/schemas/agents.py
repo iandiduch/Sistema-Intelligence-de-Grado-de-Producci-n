@@ -49,6 +49,7 @@ class ValidatorOutput(BaseModel):
 class ContactIntent(str, Enum):
     PROVIDE_CONTACT = "provide_contact"
     DECLINE = "decline"
+    NEW_QUERY = "new_query"
     UNCLEAR = "unclear"
 
 
@@ -61,9 +62,10 @@ class ContactCapture(BaseModel):
         default=ContactIntent.UNCLEAR,
         description=(
             "Intención del estudiante en lenguaje natural: "
-            "'provide_contact' si proporciona un email o teléfono; "
+            "'provide_contact' si proporciona un email o teléfono válido; "
             "'decline' si rechaza, declina o cancela la derivación (ej. 'no', 'no quiero', 'cancelar', 'dejalo', 'no gracias', 'paso'); "
-            "'unclear' si el mensaje es ambiguo o una duda no relacionada."
+            "'new_query' si el estudiante hace una nueva pregunta, cambia de tema o consulta otra cosa en lugar de dar un contacto (ej. 'hasta cuando puedo inscribirme a un final', 'que requisitos hay para regular', 'como rindo libre'); "
+            "'unclear' si el mensaje es texto confuso o incomprensible."
         ),
     )
     contact_channel: ContactChannel | None = None

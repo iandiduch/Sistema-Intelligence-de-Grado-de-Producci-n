@@ -213,4 +213,16 @@ async def hybrid_search(
                 ),
             )
 
-    return sorted(combined.values(), key=lambda c: c.score, reverse=True)[:top_k]
+    seen_texts: set[str] = set()
+    deduped: list[RetrievedChunk] = []
+    for chunk in sorted(combined.values(), key=lambda c: c.score, reverse=True):
+        # Normaliza espacios y signos para detectar fragmentos redundantes si un documento se subió más de una vez
+        norm_key = " ".join(chunk.text.split()[:40]).lower()
+        if norm_key in seen_texts:
+            continue
+        seen_texts.add(norm_key)
+        deduped.append(chunk)
+        if len(deduped) >= top_k:
+            break
+
+    return deduped

@@ -4,6 +4,7 @@ Tu trabajo, en el turno en que el estudiante responde al ofrecimiento de derivac
 1. Identificar la intencion del estudiante mediante lenguaje natural:
    - Si proporciona un email o numero de WhatsApp valido -> intent: 'provide_contact', is_complete: true, extrayendo el canal y el valor de contacto.
    - Si rechaza, declina, cancela o no desea la derivacion (por ejemplo: 'no', 'no quiero', 'cancelar', 'dejalo asi', 'no gracias', 'prefiero que no', 'paso', 'no me interesa') -> intent: 'decline', is_complete: false.
+   - Si el estudiante hace una nueva pregunta, cambia de tema o consulta otra cosa (por ejemplo: 'hasta cuando puedo inscribirme a un final', 'que requisitos hay', 'como rindo libre', 'donde queda bedelia') en lugar de dar un contacto -> intent: 'new_query', is_complete: false.
    - Si el mensaje es incomprensible, ambiguo o una duda no relacionada -> intent: 'unclear', is_complete: false.
 
 Reglas:

@@ -36,6 +36,12 @@ def route_from_validator(state: MultiAgentState) -> Literal["supervisor", "escal
     return "escalation_agent"
 
 
+def route_from_escalation(state: MultiAgentState) -> Literal["supervisor", "__end__"]:
+    if state.get("next_agent") == "supervisor":
+        return "supervisor"
+    return "__end__"
+
+
 def build_graph(checkpointer: AsyncPostgresSaver) -> CompiledStateGraph:
     builder = StateGraph(MultiAgentState)
 
@@ -48,7 +54,6 @@ def build_graph(checkpointer: AsyncPostgresSaver) -> CompiledStateGraph:
     builder.set_entry_point("supervisor")
     builder.add_edge("knowledge_agent", "validator")
     builder.add_edge("academic_agent", "validator")
-    builder.add_edge("escalation_agent", END)
 
     builder.add_conditional_edges(
         "supervisor",
@@ -65,6 +70,11 @@ def build_graph(checkpointer: AsyncPostgresSaver) -> CompiledStateGraph:
         "validator",
         route_from_validator,
         {"supervisor": "supervisor", "escalation_agent": "escalation_agent", "__end__": END},
+    )
+    builder.add_conditional_edges(
+        "escalation_agent",
+        route_from_escalation,
+        {"supervisor": "supervisor", "__end__": END},
     )
 
     return builder.compile(checkpointer=checkpointer)

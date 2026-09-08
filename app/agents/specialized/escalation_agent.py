@@ -68,6 +68,16 @@ async def escalation_agent_node(state: MultiAgentState, config: RunnableConfig) 
             "messages": [AIMessage(content=decline_message, name=AgentRole.ESCALATION.value)],
         }
 
+    if capture.intent == ContactIntent.NEW_QUERY:
+        return {
+            "escalation_contact_pending": False,
+            "escalation_question": None,
+            "validation_result": None,
+            "next_agent": "supervisor",
+            "original_question": str(last_user_message.content),
+            "iteration_count": 0,
+        }
+
     if not capture.is_complete or capture.contact_channel is None or capture.contact_value is None:
         return {"messages": [AIMessage(content=_RETRY_CONTACT_MESSAGE, name=AgentRole.ESCALATION.value)]}
 
