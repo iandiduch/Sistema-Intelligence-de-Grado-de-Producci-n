@@ -175,7 +175,18 @@ def build_chunks(
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=settings.CHUNK_SIZE,
         chunk_overlap=settings.CHUNK_OVERLAP,
-        separators=["\n## ", "\n### ", "\n\n", "\n", ". ", " ", ""],
+        separators=[
+            "\nARTÍCULO ",
+            "\nArtículo ",
+            "\nARTICULO ",
+            "\n## ",
+            "\n### ",
+            "\n\n",
+            "\n",
+            ". ",
+            " ",
+            "",
+        ],
     )
 
     chunks: list[ChunkWithMetadata] = []

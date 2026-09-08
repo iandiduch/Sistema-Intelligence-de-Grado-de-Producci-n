@@ -54,8 +54,8 @@ class Settings(BaseSettings):
 
     # --- Ingesta ---
     MAX_UPLOAD_SIZE_MB: int = 20
-    CHUNK_SIZE: int = 1000
-    CHUNK_OVERLAP: int = 150
+    CHUNK_SIZE: int = 1200
+    CHUNK_OVERLAP: int = 300
     UPLOAD_DIR: str = "data/uploads"
     INGESTION_JOB_TIMEOUT_MINUTES: int = 15
     INGESTION_MAX_RETRIES: int = 3

@@ -139,7 +139,7 @@ async def lexical_search_postgres(
 
     try:
         async with sessionmaker() as session:
-            ts_query = func.plainto_tsquery("spanish", query)
+            ts_query = func.websearch_to_tsquery("spanish", query)
             ts_vector = func.to_tsvector("spanish", DocumentChunk.text)
             rank = func.ts_rank_cd(ts_vector, ts_query).label("rank")
 
@@ -152,6 +152,23 @@ async def lexical_search_postgres(
 
             result = await session.execute(stmt)
             rows = result.all()
+
+            if not rows:
+                ts_query_plain = func.plainto_tsquery("spanish", query)
+                rank_plain = func.ts_rank_cd(ts_vector, ts_query_plain).label("rank")
+                stmt_plain = (
+                    select(DocumentChunk, rank_plain)
+                    .where(ts_vector.op("@@")(ts_query_plain))
+                    .order_by(desc(rank_plain))
+                    .limit(top_k)
+                )
+                if metadata_filter:
+                    for key, value in metadata_filter.items():
+                        if hasattr(DocumentChunk, key):
+                            stmt_plain = stmt_plain.where(getattr(DocumentChunk, key) == value)
+                result_plain = await session.execute(stmt_plain)
+                rows = result_plain.all()
+
             return [(row[0], float(row[1])) for row in rows]
     except Exception as exc:  # noqa: BLE001 - FTS resiliente; si Postgres FTS falla, hybrid_search cae a vectorial puro
         logger.warning("rag_service.postgres_fts_error", extra={"error": str(exc), "query": query})
