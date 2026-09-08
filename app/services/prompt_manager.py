@@ -8,7 +8,6 @@ import asyncio
 from pathlib import Path
 
 from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.exceptions import PromptNotFoundError
@@ -59,22 +58,14 @@ class PromptManager:
 
     async def seed_defaults_if_empty(self, defaults_dir: Path) -> None:
         async with self._sessionmaker() as session:
-            existing = await session.execute(select(AgentPrompt.agent_id))
-            if existing.first() is not None:
-                return
-
             for path in sorted(defaults_dir.glob("*.md")):
-                stmt = (
-                    pg_insert(AgentPrompt)
-                    .values(
-                        agent_id=path.stem,
-                        content=path.read_text(encoding="utf-8"),
-                        version=1,
-                        updated_by="system_seed",
-                    )
-                    .on_conflict_do_nothing(index_elements=["agent_id"])
-                )
-                await session.execute(stmt)
+                content = path.read_text(encoding="utf-8")
+                existing = await session.get(AgentPrompt, path.stem)
+                if existing is None:
+                    session.add(AgentPrompt(agent_id=path.stem, content=content, version=1, updated_by="system_seed"))
+                elif existing.updated_by == "system_seed":
+                    # Actualiza con el default más reciente del repo si no fue editado por un admin
+                    existing.content = content
             await session.commit()
 
     async def _load_from_db(self, agent_id: str) -> AgentPromptDTO | None:

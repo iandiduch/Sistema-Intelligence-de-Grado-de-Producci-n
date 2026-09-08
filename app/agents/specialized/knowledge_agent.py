@@ -48,7 +48,8 @@ async def knowledge_agent_node(state: MultiAgentState, config: RunnableConfig) -
     AGENT_EXECUTIONS_TOTAL.labels(agent_name=AgentRole.KNOWLEDGE.value).inc()
 
     with agent_span("knowledge_agent.answer", thread_id=state["thread_id"], agent=AgentRole.KNOWLEDGE):
-        search_results = await rag_tool.ainvoke({"query": state["original_question"], "top_k": 5})
+        top_k = getattr(settings, "RAG_TOP_K", 8)
+        search_results = await rag_tool.ainvoke({"query": state["original_question"], "top_k": top_k})
         context_block = _format_context(search_results)
         context_message = SystemMessage(
             content=(f"{_CONTEXT_GUARD}\n<{_CONTEXT_TAG}>\n{context_block or '(sin resultados)'}\n</{_CONTEXT_TAG}>")

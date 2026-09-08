@@ -103,7 +103,8 @@ class Settings(BaseSettings):
     HYBRID_RETRIEVAL_ENABLED: bool = True
     LEXICAL_WEIGHT: float = 0.4
     VECTOR_WEIGHT: float = 0.6
-    HYBRID_CANDIDATE_MULTIPLIER: int = 3
+    HYBRID_CANDIDATE_MULTIPLIER: int = 4
+    RAG_TOP_K: int = 8
 
     # --- Evaluacion RAG (LLM-as-judge) ---
     EVALUATION_PASS_THRESHOLD: float = 0.7

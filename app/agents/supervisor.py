@@ -78,8 +78,36 @@ async def supervisor_node(state: MultiAgentState, config: RunnableConfig) -> dic
     if decision.next_agent == "escalation_agent":
         return _force_escalation(decision.reasoning, EscalationType.USER_REQUESTED)
 
-    updates: dict[str, Any] = {"next_agent": decision.next_agent, "iteration_count": 1}
+    next_agent = decision.next_agent
     val = state.get("validation_result")
+    if val is not None and getattr(val, "requiere_mas_info", False):
+        # Si el validador solicitó más información, evitar entrar en bucle con el mismo especialista
+        if next_agent == "academic_agent" and state.get("academic_result") is not None:
+            if state.get("knowledge_result") is None:
+                logger.info(
+                    "supervisor.redirect_to_unvisited_specialist",
+                    extra={"thread_id": state["thread_id"], "from": "academic_agent", "to": "knowledge_agent"},
+                )
+                next_agent = "knowledge_agent"
+            else:
+                return _force_escalation(
+                    "Se consultaron ambos especialistas sin obtener la información requerida.",
+                    EscalationType.NO_INFO_FOUND,
+                )
+        elif next_agent == "knowledge_agent" and state.get("knowledge_result") is not None:
+            if state.get("academic_result") is None:
+                logger.info(
+                    "supervisor.redirect_to_unvisited_specialist",
+                    extra={"thread_id": state["thread_id"], "from": "knowledge_agent", "to": "academic_agent"},
+                )
+                next_agent = "academic_agent"
+            else:
+                return _force_escalation(
+                    "Se consultaron ambos especialistas sin obtener la información requerida.",
+                    EscalationType.NO_INFO_FOUND,
+                )
+
+    updates: dict[str, Any] = {"next_agent": next_agent, "iteration_count": 1}
     if val is None or not getattr(val, "requiere_mas_info", False):
         updates["knowledge_result"] = None
         updates["academic_result"] = None
