@@ -7,7 +7,6 @@ que usa add_messages): es un contador plano donde cada nodo devuelve el delta
 a sumar, no una lista que necesite merge por id.
 """
 
-import operator
 from typing import Annotated, TypedDict
 
 from langchain_core.messages import AnyMessage
@@ -31,6 +30,6 @@ class MultiAgentState(TypedDict):
     validation_result: ValidatorOutput | None
     escalation_ticket_id: str | None
     escalation_contact_pending: bool
-    iteration_count: Annotated[int, operator.add]
+    iteration_count: int
     final_answer: str | None
     error: str | None

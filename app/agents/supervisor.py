@@ -72,7 +72,7 @@ async def supervisor_node(state: MultiAgentState, config: RunnableConfig) -> dic
             "next_agent": "__end__",
             "final_answer": reply,
             "messages": [AIMessage(content=reply, name=AgentRole.SUPERVISOR.value)],
-            "iteration_count": 1,
+            "iteration_count": 0,
         }
 
     if decision.next_agent == "escalation_agent":
@@ -107,7 +107,7 @@ async def supervisor_node(state: MultiAgentState, config: RunnableConfig) -> dic
                     EscalationType.NO_INFO_FOUND,
                 )
 
-    updates: dict[str, Any] = {"next_agent": next_agent, "iteration_count": 1}
+    updates: dict[str, Any] = {"next_agent": next_agent, "iteration_count": iteration + 1}
     if val is None or not getattr(val, "requiere_mas_info", False):
         updates["knowledge_result"] = None
         updates["academic_result"] = None
@@ -125,5 +125,5 @@ def _force_escalation(reason: str, escalation_type: EscalationType) -> dict[str,
             razon=reason,
             escalation_type=escalation_type,
         ),
-        "iteration_count": 1,
+        "iteration_count": 0,
     }

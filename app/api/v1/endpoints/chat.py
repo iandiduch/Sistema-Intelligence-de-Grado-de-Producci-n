@@ -139,6 +139,7 @@ def _build_input(payload: ChatRequest, thread_id: str) -> dict[str, Any]:
         "thread_id": thread_id,
         "original_question": payload.message,
         "iteration_count": 0,
+        "escalation_ticket_id": None,
     }
 
 

@@ -291,3 +291,112 @@ async def test_multiturn_chat_updates_original_question(fake_llm, new_thread_id)
     )
     assert r2["original_question"] == "¿Por quién están integrados los departamentos?"
     assert r2["final_answer"] == "r2"
+
+
+async def test_multiturn_chat_after_ticket_creation_resets_and_answers_new_question(fake_llm, new_thread_id):
+    """Verifica que tras derivar y registrar un ticket HOTL, el siguiente mensaje en el mismo
+    thread no mantenga acumulado el contador de iteraciones ni vuelva a escalar a ciegas."""
+    from datetime import UTC, datetime
+    from uuid import uuid4
+
+    from app.domain.models import ContactChannel, EscalationPriority, EscalationStatus, EscalationType
+    from app.schemas.agents import ContactCapture
+    from app.schemas.escalation import EscalationTicketResponse
+
+    # Mock del servicio de escalamiento para retornar un ticket válido
+    mock_ticket = EscalationTicketResponse(
+        ticket_id=uuid4(),
+        thread_id=new_thread_id,
+        original_question="¿pregunta 1?",
+        relevant_history=[],
+        reason="no_info",
+        escalation_type=EscalationType.NO_INFO_FOUND,
+        priority=EscalationPriority.MEDIUM,
+        contact_channel=ContactChannel.EMAIL,
+        contact_value="test@alumno.edu",
+        status=EscalationStatus.PENDING,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    mock_escalation = AsyncMock()
+    mock_escalation.create_ticket = AsyncMock(return_value=mock_ticket)
+
+    fake_llm.program_structured(
+        SupervisorDecision,
+        SupervisorDecision(next_agent="escalation_agent", reasoning="no se encontro respuesta inicial"),
+    )
+    fake_llm.program_structured(
+        ContactCapture,
+        ContactCapture(is_complete=True, contact_channel=ContactChannel.EMAIL, contact_value="test@alumno.edu"),
+    )
+
+    graph = build_graph(MemorySaver())
+    config = _config(fake_llm, new_thread_id, [])
+    config["configurable"]["escalation_service"] = mock_escalation
+
+    # Turno 1: Entra a escalamiento y solicita contacto
+    r1 = await graph.ainvoke(
+        {
+            "messages": [HumanMessage(content="¿Cómo rindo libre?")],
+            "thread_id": new_thread_id,
+            "original_question": "¿Cómo rindo libre?",
+            "iteration_count": 0,
+        },
+        config=config,
+    )
+    assert r1["escalation_contact_pending"] is True
+
+    # Turno 2: El usuario provee su email -> se crea el ticket
+    r2 = await graph.ainvoke(
+        {
+            "messages": [HumanMessage(content="test@alumno.edu")],
+            "thread_id": new_thread_id,
+            "original_question": "test@alumno.edu",
+            "iteration_count": 0,
+        },
+        config=config,
+    )
+    assert r2["escalation_contact_pending"] is False
+    assert r2["escalation_ticket_id"] == str(mock_ticket.ticket_id)
+
+    # Turno 3: Mismo thread_id -> el usuario realiza una nueva pregunta académica
+    fake_llm.program_structured(
+        SupervisorDecision,
+        SupervisorDecision(next_agent="knowledge_agent", reasoning="consulta institucional sobre requisitos"),
+    )
+    fake_llm.program_structured(
+        KnowledgeAgentOutput,
+        KnowledgeAgentOutput(
+            encontrado_en_contexto=True,
+            nivel_de_confianza=ConfidenceLevel.HIGH,
+            respuesta="Tener regularidad y correlativas aprobadas.",
+            referencias=[],
+        ),
+    )
+    fake_llm.program_structured(
+        ValidatorOutput,
+        ValidatorOutput(
+            es_suficiente=True,
+            requiere_mas_info=False,
+            confianza=ConfidenceLevel.HIGH,
+            razon="responde adecuadamente",
+            respuesta_sintetizada="Tener regularidad y correlativas aprobadas.",
+        ),
+    )
+
+    r3 = await graph.ainvoke(
+        {
+            "messages": [HumanMessage(content="que requisitos para rendir como regular hay ?")],
+            "thread_id": new_thread_id,
+            "original_question": "que requisitos para rendir como regular hay ?",
+            "iteration_count": 0,
+            "escalation_ticket_id": None,
+        },
+        config=config,
+    )
+
+    assert r3["final_answer"] == "Tener regularidad y correlativas aprobadas."
+    assert r3["iteration_count"] == 1
+    assert r3["escalation_contact_pending"] is False
+    assert r3.get("escalation_ticket_id") is None
+
