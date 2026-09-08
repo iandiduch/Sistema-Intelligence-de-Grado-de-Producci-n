@@ -1,10 +1,24 @@
-# Sistema Intelligence Universitario · Arquitectura de Producción
+# 🎓 Sistema Intelligence Universitario · Arquitectura de Producción
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12" />
+  <img src="https://img.shields.io/badge/FastAPI-0.115+-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/LangGraph-Multi--Agent-orange?style=for-the-badge&logo=langchain&logoColor=white" alt="LangGraph" />
+  <img src="https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI" />
+  <img src="https://img.shields.io/badge/Pinecone-Vector_DB-000000?style=for-the-badge&logo=pinecone&logoColor=white" alt="Pinecone" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16_FTS-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Redis-Queue_Worker-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis" />
+  <img src="https://img.shields.io/badge/Arize_Phoenix-Observability-FF6B6B?style=for-the-badge&logoColor=white" alt="Arize Phoenix" />
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Tests-45_Passed-success?style=for-the-badge&logo=pytest&logoColor=white" alt="Pytest" />
+  <img src="https://img.shields.io/badge/Linter-Ruff_0_errors-261230?style=for-the-badge&logo=ruff&logoColor=white" alt="Ruff" />
+</p>
 
 Sistema conversacional multi-agente de grado de producción diseñado para la atención académica e institucional universitaria. La arquitectura está orquestada sobre **LangGraph** mediante un patrón de **Supervisor jerárquico** que rutea con Structured Output estricto (Pydantic v2) hacia especialistas desacoplados: un **Knowledge Agent** respaldado por un pipeline de **RAG Híbrido** (búsqueda vectorial en Pinecone + Full-Text Search en PostgreSQL con ranking `ts_rank_cd`), y un **Academic Agent** con invocación determinista de herramientas (*Tool Calling* tipado). Para garantizar fiabilidad, el sistema desacopla el ruteo de la evaluación mediante un **Agente Validador** independiente que audita la suficiencia de la evidencia y mitiga alucinaciones antes de responder. La persistencia conversacional multi-turno y la tolerancia a fallos se implementan con un **Checkpointer asíncrono en PostgreSQL (`AsyncPostgresSaver`)** por `thread_id`. Ante consultas no resueltas, el sistema activa un protocolo **HOTL (Human-on-the-Loop)** en dos turnos conversacionales que captura datos de contacto en lenguaje natural, genera tickets auditables y emite webhooks asíncronos. La plataforma opera bajo **Clean Architecture** en **Python 3.12**, con instrumentación completa de **OpenTelemetry / OpenInference** exportada a **Arize Phoenix** para observabilidad de spans, latencia, consumo de tokens y costos por modelo.
 
 ---
 
-## 1. Arquitectura y Principios de Diseño
+## 🏛️ 1. Arquitectura y Principios de Diseño
 
 El sistema está estructurado bajo **Clean Architecture** y principios **SOLID**, garantizando bajo acoplamiento, alta cohesión y testeabilidad total sin efectos colaterales globales.
 
@@ -32,7 +46,7 @@ proyecto/
 
 ---
 
-## 2. Diagrama del Sistema Multi-Agente y HOTL
+## 🔄 2. Diagrama del Sistema Multi-Agente y HOTL
 
 ```mermaid
 flowchart LR
@@ -149,27 +163,27 @@ flowchart LR
 
 ---
 
-## 3. Características Técnicas Principales
+## ⚙️ 3. Características Técnicas Principales
 
-### 3.1. Retrieval Híbrido Distribuido (PostgreSQL FTS + Pinecone)
+### 🔍 3.1. Retrieval Híbrido Distribuido (PostgreSQL FTS + Pinecone)
 - **Desacoplamiento de la Capa de Aplicación**: La búsqueda léxica se delega directamente al motor de PostgreSQL mediante `to_tsvector('spanish', text)`, `plainto_tsquery('spanish', query)` y ranking de densidad por proximidad con `ts_rank_cd`, respaldado por un índice `GIN` en la tabla `document_chunks`. Esto permite que todas las réplicas de la API compartan el mismo índice léxico centralizado sin necesidad de mantener índices locales por proceso ni desplegar motores dedicados adicionales (como Elasticsearch), simplificando la infraestructura y el escalado horizontal.
 - **Fusión Ponderada Asíncrona**: Combina los resultados densos de Pinecone con los resultados léxicos de PostgreSQL aplicando los pesos configurables `LEXICAL_WEIGHT` (0.4) y `VECTOR_WEIGHT` (0.6).
 - **Multi-Réplica Nativo**: Todas las réplicas de FastAPI consultan el mismo motor FTS central sin requerir sincronización ni consumo de RAM por proceso.
 
-### 3.2. Supervisión HOTL (Human-on-the-Loop) y Notificaciones Desacopladas
+### 🧑‍💼 3.2. Supervisión HOTL (Human-on-the-Loop) y Notificaciones Desacopladas
 - **Flujo No Bloqueante en 2 Turnos**: La IA detecta casos no resueltos o de baja confianza, solicita el contacto (Email o WhatsApp) y emite un ticket administrativo sin bloquear la API con `interrupt()`.
 - **Servicio de Notificación vía Webhook**: Integra `HOTLNotificationService`, que dispara un webhook asíncrono con el payload del ticket hacia el sistema de Bedelía/Secretaría sin retrasar la respuesta al usuario.
 - **Resolución Humana**: El personal administrativo consulta y resuelve tickets mediante los endpoints `/api/v1/escalations`.
 
-### 3.3. Worker de Ingesta Escalable y Recuperación de Jobs Huérfanos
+### ⚡ 3.3. Worker de Ingesta Escalable y Recuperación de Jobs Huérfanos
 - **Worker Pool en Docker**: Múltiples réplicas de `ingestion-worker` consumen de forma segura la cola de Redis mediante `blpop` atómico (`docker compose up --scale ingestion-worker=3`).
 - **Recuperación Automática de Jobs Caídos**: La función `recover_orphaned_jobs` se ejecuta al arranque y cada 5 minutos, identificando jobs en `PROCESSING` que hayan superado `INGESTION_JOB_TIMEOUT_MINUTES` (15 min). Si no han alcanzado `INGESTION_MAX_RETRIES` (3), los re-encola en estado `PENDING`; de lo contrario, los marca como `FAILED` con mensaje explicativo.
 
-### 3.4. Observabilidad Integral (Arize Phoenix & Prometheus)
+### 📊 3.4. Observabilidad Integral (Arize Phoenix & Prometheus)
 - **Trazabilidad OpenTelemetry**: Instrumentación de LangGraph, OpenAI y spans enriquecidos para escalamientos HOTL (`hotl.escalation=true`, `hotl.ticket_id`, etc.) y atributos semánticos de cuota (`llm.provider.rate_limited=true`).
 - **Métricas Prometheus (`/metrics`)**: Expone contadores de tráfico HTTP, latencia por percentiles, ejecuciones de agentes, creación de tickets HOTL y procesamiento de jobs de ingesta. Protegido bajo scope `admin` para prevenir exposición pública de metadatos operativos (Information Disclosure).
 
-### 3.5. Mitigación de Prompt Injection (Directa e Indirecta vía RAG)
+### 🛡️ 3.5. Mitigación de Prompt Injection (Directa e Indirecta vía RAG)
 El contexto documental que retrieval trae de Pinecone/Postgres FTS es dato de terceros (cualquiera con scope `admin` puede haber subido ese documento) y por lo tanto no confiable. Cuatro capas independientes lo mitigan:
 - **Hardening explícito en los 5 prompts de agentes** (`app/agents/prompts/defaults/*.md`): cada uno instruye al modelo a tratar el contenido del contexto/mensajes/resultados de herramientas como datos a evaluar, nunca como instrucciones a obedecer.
 - **Contexto RAG delimitado y con advertencia inline**: `knowledge_agent_node` inyecta el contexto recuperado dentro de las etiquetas `<contexto_documental>...</contexto_documental>` en un `SystemMessage` separado con una advertencia explícita, en vez de mezclarlo sin marcar en el historial de mensajes.
@@ -178,9 +192,9 @@ El contexto documental que retrieval trae de Pinecone/Postgres FTS es dato de te
 
 ---
 
-## 4. Guía de Ejecución y Despliegue
+## 🚀 4. Guía de Ejecución y Despliegue
 
-### 4.1. Despliegue con Docker Compose (Recomendado)
+### 🐳 4.1. Despliegue con Docker Compose (Recomendado)
 
 En un VPS Ubuntu vacío (sin Docker instalado), el script `run.sh` detecta la falta de Docker y lo instala automáticamente junto con Docker Compose, asegurando permisos y configuraciones:
 
@@ -206,7 +220,7 @@ En un VPS Ubuntu vacío (sin Docker instalado), el script `run.sh` detecta la fa
    docker compose up --scale ingestion-worker=3 -d
    ```
 
-### 4.2. Ejecución Local Nativa (Desarrollo sin Docker)
+### 💻 4.2. Ejecución Local Nativa (Desarrollo sin Docker)
 
 1. Crear y activar el entorno virtual con Python 3.12:
    ```bash
@@ -232,7 +246,7 @@ En un VPS Ubuntu vacío (sin Docker instalado), el script `run.sh` detecta la fa
 
 ---
 
-## 5. Documentación Interactiva de la API
+## 📚 5. Documentación Interactiva de la API
 
 La API cuenta con documentación autogenerada y detallada:
 
@@ -263,7 +277,7 @@ La API cuenta con documentación autogenerada y detallada:
 
 ---
 
-## 6. Monitoreo y Alertas en Arize Phoenix
+## 📈 6. Monitoreo y Alertas en Arize Phoenix
 
 Arize Phoenix (`http://localhost:6006`) proporciona observabilidad profunda de cada invocación LLM y herramienta:
 
@@ -278,7 +292,7 @@ Arize Phoenix (`http://localhost:6006`) proporciona observabilidad profunda de c
    - Monitorear la duración de spans en `knowledge_agent.answer` y `validator.decide` cuando superen los 8 segundos.
 
 
-### 6.1. Evidencias y Capturas de Trazabilidad (`screenshots/`)
+### 📸 6.1. Evidencias y Capturas de Trazabilidad (`screenshots/`)
 Las capturas de pantalla de la consola de Arize Phoenix se organizan en el directorio [`screenshots/`](screenshots/):
 * **Árbol de Spans de LangGraph**: Visualización de la jerarquía de ejecución `supervisor` -> especialista -> `validator`.
 * **Trazas de RAG Híbrido**: Spans de llamadas concurrentes a Pinecone (búsqueda densa) y PostgreSQL (FTS léxico) con sus latencias y metadatos.
@@ -286,7 +300,7 @@ Las capturas de pantalla de la consola de Arize Phoenix se organizan en el direc
 
 ---
 
-## 7. Suite de Pruebas y Calidad de Código
+## 🧪 7. Suite de Pruebas y Calidad de Código
 
 El repositorio incluye configuración de **Ruff**, **Mypy** y **Pytest** en `pyproject.toml`.
 
@@ -312,7 +326,7 @@ python -m scripts.evaluate_rag
 
 ---
 
-## 8. Resultados de la Evaluación RAG (Golden Set & RAG Triad)
+## 🏆 8. Resultados de la Evaluación RAG (Golden Set & RAG Triad)
 
 Para validar objetivamente el comportamiento del pipeline RAG y la fidelidad del `KnowledgeAgent`, se ejecutó el arnés de evaluación automatizado con **LLM-as-a-Judge** ([`scripts/evaluate_rag.py`](scripts/evaluate_rag.py)) contra el conjunto de prueba curado ([`data/golden_set.json`](data/golden_set.json)).
 
