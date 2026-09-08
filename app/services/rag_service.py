@@ -142,12 +142,7 @@ async def lexical_search_postgres(
             ts_vector = func.to_tsvector("spanish", DocumentChunk.text)
             rank = func.ts_rank_cd(ts_vector, ts_query).label("rank")
 
-            stmt = (
-                select(DocumentChunk, rank)
-                .where(ts_vector.op("@@")(ts_query))
-                .order_by(desc(rank))
-                .limit(top_k)
-            )
+            stmt = select(DocumentChunk, rank).where(ts_vector.op("@@")(ts_query)).order_by(desc(rank)).limit(top_k)
 
             if metadata_filter:
                 for key, value in metadata_filter.items():

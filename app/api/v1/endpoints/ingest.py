@@ -41,7 +41,9 @@ _READ_CHUNK_BYTES = 1024 * 1024
     description="Sube un archivo institucional (.pdf, .docx, .txt, .md), valida su tamaño y extensión, y encola un job asíncrono en Redis para parseo, chunking y generación de embeddings.",
     response_description="Confirmación del job de ingesta creado con su UUID para seguimiento.",
 )
-async def ingest_document(file: UploadFile, db: DbSessionDep, redis: RedisDep, settings: SettingsDep) -> IngestUploadResponse:
+async def ingest_document(
+    file: UploadFile, db: DbSessionDep, redis: RedisDep, settings: SettingsDep
+) -> IngestUploadResponse:
     raw_filename = file.filename or ""
     display_filename = Path(raw_filename).name or str(uuid4())
     extension = display_filename.rsplit(".", 1)[-1].lower() if "." in display_filename else ""

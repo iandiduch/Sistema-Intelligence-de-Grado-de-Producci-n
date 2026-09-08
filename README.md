@@ -20,6 +20,7 @@ proyecto/
 │   └── api/                   # FastAPI REST Gateway: routers v1, inyección de dependencias, middlewares y exception handlers
 ├── data/                      # Almacenamiento local persistente: uploads temporales, prompts sembrados y datasets de evaluación
 ├── scripts/                   # Scripts de inicialización de base de datos (init_db) y evaluación LLM-as-judge (evaluate_rag)
+├── screenshots/               # Evidencias visuales: capturas de trazas en Arize Phoenix y monitoreo
 ├── tests/                     # Suite de pruebas automatizadas unitarias, de integración, seguridad, concurrencia y métricas
 ├── Dockerfile                 # Contenedor optimizado multi-stage con usuario no-root
 ├── docker-compose.yml         # Orquestación de servicios (FastAPI, Redis, PostgreSQL, Worker escalable y Phoenix opcional)
@@ -271,6 +272,13 @@ Arize Phoenix (`http://localhost:6006`) proporciona observabilidad profunda de c
 3. **Anomalías de Latencia**:
    - Monitorear la duración de spans en `knowledge_agent.answer` y `validator.decide` cuando superen los 8 segundos.
 
+
+### 6.1. Evidencias y Capturas de Trazabilidad (`screenshots/`)
+Las capturas de pantalla de la consola de Arize Phoenix se organizan en el directorio [`screenshots/`](screenshots/):
+* **Árbol de Spans de LangGraph**: Visualización de la jerarquía de ejecución `supervisor` -> especialista -> `validator`.
+* **Trazas de RAG Híbrido**: Spans de llamadas concurrentes a Pinecone (búsqueda densa) y PostgreSQL (FTS léxico) con sus latencias y metadatos.
+* **Telemetría HOTL**: Spans enriquecidos con atributos de escalamiento (`hotl.escalation=True`, `hotl.ticket_id`).
+
 ---
 
 ## 7. Suite de Pruebas y Calidad de Código
@@ -291,9 +299,46 @@ ruff check app/ tests/ scripts/
 ruff format app/ tests/ scripts/
 ```
 
-### Evaluación LLM-as-a-Judge (RAG Triad):
-Para medir la fidelidad (*faithfulness*) y relevancia (*answer relevance*) del sistema RAG contra el conjunto de preguntas de validación:
+### Ejecución del Evaluador RAG (LLM-as-a-Judge):
 ```bash
+# Ejecutar dentro del contenedor de la API o localmente:
 python -m scripts.evaluate_rag
 ```
-Los resultados detallados se guardarán en `data/evaluation_results.json`.
+
+---
+
+## 8. Resultados de la Evaluación RAG (Golden Set & RAG Triad)
+
+Para validar objetivamente el comportamiento del pipeline RAG y la fidelidad del `KnowledgeAgent`, se ejecutó el arnés de evaluación automatizado con **LLM-as-a-Judge** ([`scripts/evaluate_rag.py`](scripts/evaluate_rag.py)) contra el conjunto de prueba curado ([`data/golden_set.json`](data/golden_set.json)).
+
+### 8.1. Resumen Ejecutivo de Métricas
+
+* **Tasa de Aprobación**: **10/10 preguntas aprobadas (100% de éxito)** con umbral mínimo $\ge 0.70$.
+* **Fidelidad Promedio (*Faithfulness*)**: **1.00 / 1.00** *(cero alucinaciones: todas las afirmaciones provienen estrictamente del contexto recuperado)*.
+* **Relevancia Promedio (*Answer Relevance*)**: **1.00 / 1.00** *(respuestas directas, completas y contextualizadas a la pregunta del estudiante)*.
+* **Registro de Resultados**: [`data/evaluation_results.json`](data/evaluation_results.json).
+
+### 8.2. Detalle de Preguntas y Evaluación Caso por Caso
+
+| # | Pregunta | Documento(s) Esperado(s) | Fuentes Recuperadas | Faithfulness | Relevance | Estado |
+|:---:|:---|:---|:---|:---:|:---:|:---:|
+| 1 | ¿Cuáles son los pasos para realizar la baja de matrícula de un alumno? | `reglamento-academico-alumnos.pdf` | `reglamento-academico-alumnos.pdf` | **1.00** | **1.00** | ✅ OK |
+| 2 | ¿Cuál es el máximo de materias que se pueden aprobar por equivalencia? | `reglamento-equivalencias.pdf` | `reglamento-equivalencias.pdf` | **1.00** | **1.00** | ✅ OK |
+| 3 | ¿Cuánto tardan en aprobar una beca de comedor? | `Becas_de_Comedor.pdf` | `Becas_de_Comedor.pdf` | **1.00** | **1.00** | ✅ OK |
+| 4 | ¿Qué tengo que hacer para inscribirme a una carrera online? | `anexo procedimiento inscripcion online carreras.pdf` | `anexo procedimiento...`, `Resolucion_080-12...`, `disp.-n-1053-22...` | **1.00** | **1.00** | ✅ OK |
+| 5 | ¿Por quién están integrados los departamentos? | `ESTATUTO_UNCAUS.pdf` | `ESTATUTO_UNCAUS.pdf` | **1.00** | **1.00** | ✅ OK |
+| 6 | ¿Hasta qué edad máxima puedo entrar a estudiar? | `Resolucion_080-12_CS-Reglamento_de_Alumnos.pdf` | `ESTATUTO_UNCAUS.pdf`, `Resolucion_080-12...` | **1.00** | **1.00** | ✅ OK |
+| 7 | ¿Cuántas carreras a la vez puedo estudiar? | `Resolucion_080-12_CS-Reglamento_de_Alumnos.pdf` | `Resolucion_080-12...`, `gua-para-presentacin...` | **1.00** | **1.00** | ✅ OK |
+| 8 | ¿Qué diferencia hay entre ser alumno regular y hacer equivalencias? | `Resolucion_080-12...`, `reglamento-equivalencias.pdf` | `Resolucion_080-12...`, `reglamento-equivalencias.pdf` | **1.00** | **1.00** | ✅ OK |
+| 9 | ¿Qué diferencia hay entre sacar una beca de comedor y un ticket de comedor? | `Becas_de_Comedor.pdf`, `Tickets_de_comedor.pdf` | `Becas_de_Comedor.pdf`, `Tickets_de_comedor.pdf` | **1.00** | **1.00** | ✅ OK |
+| 10 | ¿Tengo que pagar para dejar la moto en el estacionamiento de la facultad? | *(Ninguno - Fuera de dominio)* | *(Sin fuentes institucionales relevantes)* | **1.00** | **1.00** | ✅ OK |
+
+### 8.3. Hallazgos y Análisis Cualitativo
+
+1. **Exactitud de Hechos y Límites Normativos**:
+   * En la consulta de *equivalencias*, el sistema extrajo con precisión quirúrgica el límite del **50%** y las causales de excepción reglamentarias.
+   * En la consulta de *becas de comedor*, diferenció con exactitud los dos plazos administrativos: dictamen de comisión (hasta 2 meses) y notificación rectoral (**7 días**).
+2. **Síntesis Multidocumental y Comparativa**:
+   * En las preguntas de comparación (regularidad vs equivalencias y beca vs ticket de comedor), el pipeline recuperó fragmentos de dos reglamentos diferentes y redactó respuestas comparativas estructuradas sin mezclar las condiciones ni las normativas.
+3. **Mecanismo Anti-Alucinación (Out-of-Domain)**:
+   * En la consulta sobre el *estacionamiento de motos*, al no existir información en el corpus documental cargado, el agente respondió honestamente: *"No se encontró información específica sobre el pago para estacionar motos en la facultad en el contexto recuperado"*, alcanzando **1.00 en Faithfulness** y previniendo la invención de normativas inexistentes.

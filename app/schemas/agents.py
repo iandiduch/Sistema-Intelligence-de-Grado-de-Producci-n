@@ -1,6 +1,7 @@
 """Schemas de salida estructurada de cada nodo del grafo. Viven separados de
 agents.py para que servicios/tests puedan importarlos sin arrastrar LangGraph."""
 
+from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -45,7 +46,25 @@ class ValidatorOutput(BaseModel):
     escalation_type: EscalationType | None = None
 
 
+class ContactIntent(str, Enum):
+    PROVIDE_CONTACT = "provide_contact"
+    DECLINE = "decline"
+    UNCLEAR = "unclear"
+
+
 class ContactCapture(BaseModel):
-    is_complete: bool
+    is_complete: bool = Field(
+        default=False,
+        description="True únicamente si el estudiante proporcionó un email o teléfono válido",
+    )
+    intent: ContactIntent = Field(
+        default=ContactIntent.UNCLEAR,
+        description=(
+            "Intención del estudiante en lenguaje natural: "
+            "'provide_contact' si proporciona un email o teléfono; "
+            "'decline' si rechaza, declina o cancela la derivación (ej. 'no', 'no quiero', 'cancelar', 'dejalo', 'no gracias', 'paso'); "
+            "'unclear' si el mensaje es ambiguo o una duda no relacionada."
+        ),
+    )
     contact_channel: ContactChannel | None = None
     contact_value: str | None = None

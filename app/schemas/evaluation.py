@@ -14,7 +14,9 @@ class GoldenSetItem(BaseModel):
 class EvaluationJudgment(BaseModel):
     """Salida estructurada del LLM actuando de juez (RAG Triad: faithfulness + answer relevance)."""
 
-    faithfulness: float = Field(ge=0, le=1, description="Que tan fundamentada esta la respuesta en el contexto recuperado")
+    faithfulness: float = Field(
+        ge=0, le=1, description="Que tan fundamentada esta la respuesta en el contexto recuperado"
+    )
     faithfulness_reasoning: str
     relevance: float = Field(ge=0, le=1, description="Que tan bien la respuesta contesta la pregunta original")
     relevance_reasoning: str

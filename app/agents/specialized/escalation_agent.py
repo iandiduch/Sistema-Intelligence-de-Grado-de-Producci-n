@@ -16,7 +16,7 @@ from app.core.metrics import AGENT_EXECUTIONS_TOTAL
 from app.core.structured_output import invoke_structured_with_retry
 from app.core.tracing_utils import hotl_escalation_span
 from app.domain.models import AgentRole, EscalationType
-from app.schemas.agents import ContactCapture
+from app.schemas.agents import ContactCapture, ContactIntent
 from app.schemas.chat import MessageDTO
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,7 @@ async def escalation_agent_node(state: MultiAgentState, config: RunnableConfig) 
         return {
             "messages": [AIMessage(content=_ASK_CONTACT_MESSAGE, name=AgentRole.ESCALATION.value)],
             "escalation_contact_pending": True,
+            "escalation_question": state.get("original_question"),
         }
 
     configurable = config["configurable"]
@@ -54,12 +55,25 @@ async def escalation_agent_node(state: MultiAgentState, config: RunnableConfig) 
         logger.error("escalation_agent.capture_failed", extra={"thread_id": state["thread_id"], "error": str(exc)})
         capture = ContactCapture(is_complete=False)
 
+    if capture.intent == ContactIntent.DECLINE:
+        decline_message = (
+            "Entendido, no hay problema. Cancelamos la derivación a Secretaría. "
+            "¿Hay alguna otra consulta en la que te pueda ayudar?"
+        )
+        return {
+            "escalation_contact_pending": False,
+            "escalation_question": None,
+            "final_answer": decline_message,
+            "messages": [AIMessage(content=decline_message, name=AgentRole.ESCALATION.value)],
+        }
+
     if not capture.is_complete or capture.contact_channel is None or capture.contact_value is None:
         return {"messages": [AIMessage(content=_RETRY_CONTACT_MESSAGE, name=AgentRole.ESCALATION.value)]}
 
     escalation_type, reason = _escalation_context(state)
     window = state["messages"][-settings.ESCALATION_HISTORY_WINDOW :]
     relevant_history = [MessageDTO(role=m.type, content=str(m.content)) for m in window]
+    escalation_question = state.get("escalation_question") or state.get("original_question") or "Consulta institucional"
 
     with hotl_escalation_span(
         thread_id=state["thread_id"],
@@ -71,7 +85,7 @@ async def escalation_agent_node(state: MultiAgentState, config: RunnableConfig) 
         ticket = await registrar_ticket_escalamiento(
             escalation_service,
             thread_id=state["thread_id"],
-            original_question=state["original_question"],
+            original_question=escalation_question,
             relevant_history=relevant_history,
             reason=reason,
             escalation_type=escalation_type,
@@ -87,6 +101,7 @@ async def escalation_agent_node(state: MultiAgentState, config: RunnableConfig) 
     return {
         "escalation_ticket_id": str(ticket.ticket_id),
         "escalation_contact_pending": False,
+        "escalation_question": None,
         "final_answer": confirmation,
         "messages": [AIMessage(content=confirmation, name=AgentRole.ESCALATION.value)],
     }

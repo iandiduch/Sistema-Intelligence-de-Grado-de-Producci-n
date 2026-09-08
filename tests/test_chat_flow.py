@@ -188,3 +188,106 @@ async def test_chat_flow_multi_agent_cycle_via_validator(fake_llm, new_thread_id
 
     assert result["final_answer"] == "El plan incluye Algoritmos y se cursa los martes de 18 a 22 hs."
     assert result.get("escalation_ticket_id") is None
+
+
+async def test_escalation_natural_language_decline_cancels_cleanly(fake_llm, new_thread_id):
+    from app.schemas.agents import ContactCapture, ContactIntent
+
+    fake_llm.program_structured(
+        SupervisorDecision,
+        SupervisorDecision(next_agent="escalation_agent", reasoning="usuario solicita hablar con una persona"),
+    )
+    graph = build_graph(MemorySaver())
+    config = _config(fake_llm, new_thread_id, [])
+
+    # Turno 1: Entra a HOTL y solicita contacto
+    result_1 = await graph.ainvoke(
+        {
+            "messages": [HumanMessage(content="Quiero hablar con una persona")],
+            "thread_id": new_thread_id,
+            "original_question": "Quiero hablar con una persona",
+            "iteration_count": 0,
+        },
+        config=config,
+    )
+    assert result_1["escalation_contact_pending"] is True
+
+    # Turno 2: El usuario declina en lenguaje natural ("no quiero")
+    fake_llm.program_structured(
+        ContactCapture,
+        ContactCapture(is_complete=False, intent=ContactIntent.DECLINE),
+    )
+    result_2 = await graph.ainvoke(
+        {
+            "messages": [HumanMessage(content="no quiero")],
+            "thread_id": new_thread_id,
+            "original_question": "no quiero",
+            "iteration_count": 0,
+        },
+        config=config,
+    )
+    assert result_2["escalation_contact_pending"] is False
+    assert result_2.get("escalation_ticket_id") is None
+    assert "cancelamos la derivación" in result_2["final_answer"].lower()
+
+
+async def test_multiturn_chat_updates_original_question(fake_llm, new_thread_id):
+    fake_llm.program_structured(
+        SupervisorDecision,
+        SupervisorDecision(next_agent="knowledge_agent", reasoning="pregunta 1"),
+        SupervisorDecision(next_agent="knowledge_agent", reasoning="pregunta 2"),
+    )
+    fake_llm.program_structured(
+        KnowledgeAgentOutput,
+        KnowledgeAgentOutput(
+            encontrado_en_contexto=True, nivel_de_confianza=ConfidenceLevel.HIGH, respuesta="r1", referencias=[]
+        ),
+        KnowledgeAgentOutput(
+            encontrado_en_contexto=True, nivel_de_confianza=ConfidenceLevel.HIGH, respuesta="r2", referencias=[]
+        ),
+    )
+    fake_llm.program_structured(
+        ValidatorOutput,
+        ValidatorOutput(
+            es_suficiente=True,
+            requiere_mas_info=False,
+            confianza=ConfidenceLevel.HIGH,
+            razon="ok",
+            respuesta_sintetizada="r1",
+        ),
+        ValidatorOutput(
+            es_suficiente=True,
+            requiere_mas_info=False,
+            confianza=ConfidenceLevel.HIGH,
+            razon="ok",
+            respuesta_sintetizada="r2",
+        ),
+    )
+
+    graph = build_graph(MemorySaver())
+    config = _config(fake_llm, new_thread_id, [{"text": "info", "metadata": {"source": "doc.pdf"}}])
+
+    # Turno 1
+    r1 = await graph.ainvoke(
+        {
+            "messages": [HumanMessage(content="¿Cómo son las equivalencias?")],
+            "thread_id": new_thread_id,
+            "original_question": "¿Cómo son las equivalencias?",
+            "iteration_count": 0,
+        },
+        config=config,
+    )
+    assert r1["original_question"] == "¿Cómo son las equivalencias?"
+
+    # Turno 2 (Mismo thread_id, pregunta completamente distinta)
+    r2 = await graph.ainvoke(
+        {
+            "messages": [HumanMessage(content="¿Por quién están integrados los departamentos?")],
+            "thread_id": new_thread_id,
+            "original_question": "¿Por quién están integrados los departamentos?",
+            "iteration_count": 0,
+        },
+        config=config,
+    )
+    assert r2["original_question"] == "¿Por quién están integrados los departamentos?"
+    assert r2["final_answer"] == "r2"

@@ -51,10 +51,7 @@ async def knowledge_agent_node(state: MultiAgentState, config: RunnableConfig) -
         search_results = await rag_tool.ainvoke({"query": state["original_question"], "top_k": 5})
         context_block = _format_context(search_results)
         context_message = SystemMessage(
-            content=(
-                f"{_CONTEXT_GUARD}\n"
-                f"<{_CONTEXT_TAG}>\n{context_block or '(sin resultados)'}\n</{_CONTEXT_TAG}>"
-            )
+            content=(f"{_CONTEXT_GUARD}\n<{_CONTEXT_TAG}>\n{context_block or '(sin resultados)'}\n</{_CONTEXT_TAG}>")
         )
         llm_messages = [*state["messages"], context_message]
 

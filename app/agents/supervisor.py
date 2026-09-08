@@ -59,7 +59,9 @@ async def supervisor_node(state: MultiAgentState, config: RunnableConfig) -> dic
             logger.error("supervisor.llm_decision_failed", extra={"thread_id": state["thread_id"], "error": str(exc)})
             span.set_attribute("supervisor.decision", "escalation_agent")
             span.set_attribute("supervisor.reasoning", f"fallo_tecnico: {exc}")
-            return _force_escalation(f"Fallo tecnico del supervisor al decidir el ruteo: {exc}", EscalationType.REQUIRES_HUMAN_ACTION)
+            return _force_escalation(
+                f"Fallo tecnico del supervisor al decidir el ruteo: {exc}", EscalationType.REQUIRES_HUMAN_ACTION
+            )
 
         span.set_attribute("supervisor.decision", decision.next_agent)
         span.set_attribute("supervisor.reasoning", decision.reasoning)
@@ -76,7 +78,13 @@ async def supervisor_node(state: MultiAgentState, config: RunnableConfig) -> dic
     if decision.next_agent == "escalation_agent":
         return _force_escalation(decision.reasoning, EscalationType.USER_REQUESTED)
 
-    return {"next_agent": decision.next_agent, "iteration_count": 1}
+    updates: dict[str, Any] = {"next_agent": decision.next_agent, "iteration_count": 1}
+    val = state.get("validation_result")
+    if val is None or not getattr(val, "requiere_mas_info", False):
+        updates["knowledge_result"] = None
+        updates["academic_result"] = None
+        updates["validation_result"] = None
+    return updates
 
 
 def _force_escalation(reason: str, escalation_type: EscalationType) -> dict[str, Any]:

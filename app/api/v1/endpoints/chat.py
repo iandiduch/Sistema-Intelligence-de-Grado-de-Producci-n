@@ -46,7 +46,9 @@ async def chat(
     settings: SettingsDep,
 ) -> ChatResponse:
     thread_id = payload.thread_id or str(uuid4())
-    config = _build_config(thread_id, llm_client, prompt_manager, rag_tool, academic_tools, escalation_service, settings)
+    config = _build_config(
+        thread_id, llm_client, prompt_manager, rag_tool, academic_tools, escalation_service, settings
+    )
     graph_input = _build_input(payload, thread_id)
 
     try:
@@ -81,7 +83,9 @@ async def chat_stream(
     settings: SettingsDep,
 ) -> StreamingResponse:
     thread_id = payload.thread_id or str(uuid4())
-    config = _build_config(thread_id, llm_client, prompt_manager, rag_tool, academic_tools, escalation_service, settings)
+    config = _build_config(
+        thread_id, llm_client, prompt_manager, rag_tool, academic_tools, escalation_service, settings
+    )
     graph_input = _build_input(payload, thread_id)
 
     async def event_source():

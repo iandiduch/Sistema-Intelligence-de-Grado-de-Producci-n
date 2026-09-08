@@ -172,8 +172,10 @@ async def test_recover_orphaned_jobs_unit(test_settings: Settings):
     class _MockSessionMaker:
         def __call__(self):
             return self
+
         async def __aenter__(self):
             return mock_session
+
         async def __aexit__(self, exc_type, exc_val, exc_tb):
             pass
 

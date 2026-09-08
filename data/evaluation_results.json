@@ -1,0 +1,126 @@
+[
+    {
+        "question": "¿Cuales son los pasos para realizar la baja de matricula de un alumno?",
+        "answer": "Los pasos para realizar la baja de matrícula de un alumno son los siguientes:\n\n1. **Corroborar la Historia Académica**: Antes de iniciar el procedimiento, el alumno debe verificar su Historia Académica. Si hay alguna irregularidad, debe comunicarse con el Área de Gestión de Alumnos.\n\n2. **Acceder al Sistema**: El alumno debe ingresar al Sistema TAE (para carreras presenciales) o al Sistema SGA (para carreras virtuales) para realizar el proceso de baja de matrícula.\n\n3. **Seleccionar la Carrera**: Si el alumno está cursando más de una carrera, debe seleccionar la carrera de la cual desea darse de baja e indicar las razones de su decisión.\n\n4. **Generación de Nota**: El sistema generará automáticamente una nota con todos los datos del alumno, la cual deberá ser firmada por el interesado.\n\n5. **Subir Documentación**: El alumno debe subir al sistema los siguientes archivos en formato digital escaneados:\n   - Nota generada por el sistema, firmada por el alumno.\n   - Foto (frente y dorso) de DNI.\n\n6. **Confirmación de Baja**: Una vez recibida la solicitud, se procederá a realizar la baja temporal o definitiva de la matrícula, según lo solicitado, y se comunicará al alumno por correo electrónico sobre la realización de la baja.\n\n7. **Constancia de Baja**: El alumno podrá autogestionar a través del Sistema SGA la Constancia de Baja Temporal de Matrícula, que contendrá un código QR de validación. (Anexo V)",
+        "sources_used": [
+            "reglamento-academico-alumnos.pdf"
+        ],
+        "expected_source": "reglamento-academico-alumnos.pdf",
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "passed": true
+    },
+    {
+        "question": "¿Cual es el maximo de materias que se pueden aprobar por equivalencia?",
+        "answer": "Se pueden aprobar por reconocimiento por equivalencia hasta un máximo del cincuenta por ciento (50%) de las asignaturas que integren el Plan de Estudio de la carrera a cursar en la Universidad Nacional del Chaco Austral. Este límite puede ser excedido en casos específicos, como cambios de Plan de Estudio o razones de reubicación geográfica, entre otros motivos debidamente fundados.",
+        "sources_used": [
+            "reglamento-equivalencias.pdf"
+        ],
+        "expected_source": "reglamento-equivalencias.pdf",
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "passed": true
+    },
+    {
+        "question": "¿Cuanto tardan en aprobar una beca de comedor?",
+        "answer": "Las solicitudes de beca de comedor serán evaluadas y preseleccionadas por la Comisión de la Secretaría de Bienestar Estudiantil, la cual elevará sus dictámenes al Rector en un plazo máximo de dos (2) meses desde la fecha de cierre de presentación de solicitudes. Posteriormente, el Rectorado emitirá y notificará al postulante su resolución sobre el otorgamiento o denegación de la beca en un término máximo de siete (7) días de recibido el dictamen.",
+        "sources_used": [
+            "Becas_de_Comedor.pdf"
+        ],
+        "expected_source": "Becas_de_Comedor.pdf",
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "passed": true
+    },
+    {
+        "question": "¿Que tengo que hacer para inscribirme a una carrera online?",
+        "answer": "Para inscribirte a una carrera online en la Universidad Nacional del Chaco Austral (UNCAUS), debes seguir estos pasos: 1. Abrir el navegador web e ingresar al Portal de Preinscripción de la UNCAUS. 2. Acceder a los Manuales de Procedimientos disponibles en el portal, según tu situación (Alumnos Nuevos, Alumnos de alguna carrera de la UNCAUS, etc.). 3. Ingresar tu número de documento en el sistema, que validará tu situación y te guiará a la plataforma de preinscripción correspondiente. 4. Completar el formulario de preinscripción, guardar los cambios, descargarlo e imprimirlo. 5. Si realizaste modificaciones después de imprimir el formulario, asegúrate de actualizarlo. (Fuente: Anexo del Procedimiento de Inscripción Online a Carreras, Disposición N° 1534/2023).",
+        "sources_used": [
+            "Resolucion_080-12_CS-Reglamento_de_Alumnos.pdf",
+            "anexo procedimiento inscripcion online carreras.pdf",
+            "disp.-n-1053-22--s.a.-procedimiento-de-inscripcin-online-a-carreras-ciclo-lectivo-2023-1.pdf",
+            "gua-para-presentacin-de-legajos-digitales1.pdf"
+        ],
+        "expected_source": "anexo procedimiento inscripcion online carreras.pdf",
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "passed": true
+    },
+    {
+        "question": "¿Por quien estan integrados los departamentos?",
+        "answer": "Los Departamentos están integrados por: \n- El Director del Departamento. \n- Tres Consejeros docentes representantes del claustro docente del Departamento. \n- Un Consejero estudiantil representante del claustro de estudiantes del Departamento. \n- Los directores de carreras pertenecientes al departamento.",
+        "sources_used": [
+            "ESTATUTO_UNCAUS.pdf"
+        ],
+        "expected_source": "ESTATUTO_UNCAUS.pdf",
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "passed": true
+    },
+    {
+        "question": "¿Hasta que edad maxima puedo entrar a estudiar?",
+        "answer": "No hay una edad máxima establecida para ingresar a las carreras que ofrece la UNCAus. Sin embargo, se menciona que excepcionalmente, los mayores de 25 años que no cumplan con el requisito de haber aprobado el Nivel Medio/Polimodal/Educación Secundaria pueden ingresar previa aprobación de una evaluación de antecedentes laborales y de un examen de aptitudes. Esto sugiere que no hay un límite de edad, pero sí se requiere cumplir con ciertos requisitos para quienes tienen más de 25 años.",
+        "sources_used": [
+            "ESTATUTO_UNCAUS.pdf",
+            "Resolucion_080-12_CS-Reglamento_de_Alumnos.pdf"
+        ],
+        "expected_source": "Resolucion_080-12_CS-Reglamento_de_Alumnos.pdf",
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "passed": true
+    },
+    {
+        "question": "¿Cuantas carreras a la vez puedo estudiar?",
+        "answer": "Puedes inscribirte hasta en dos (2) carreras de grado y/o pregrado a la vez.",
+        "sources_used": [
+            "Resolucion_080-12_CS-Reglamento_de_Alumnos.pdf",
+            "gua-para-presentacin-de-legajos-digitales1.pdf"
+        ],
+        "expected_source": "Resolucion_080-12_CS-Reglamento_de_Alumnos.pdf",
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "passed": true
+    },
+    {
+        "question": "¿Que diferencia hay entre ser alumno regular y hacer equivalencias?",
+        "answer": "La diferencia entre ser alumno regular y hacer equivalencias radica en el estatus del estudiante y el proceso de reconocimiento de asignaturas:\n\n1. **Alumno Regular**: Un alumno regular es aquel que cumple con ciertos requisitos establecidos para regularizar una asignatura, que incluyen:\n   - Asistencia al 75% de las clases de Trabajos Prácticos.\n   - Aprobación del 100% de los Trabajos Prácticos realizados.\n   - Aprobación de los Exámenes Parciales. (Fuente: Resolución N° 080/12 – C.S.)\n\n2. **Equivalencias**: Hacer equivalencias implica solicitar el reconocimiento de asignaturas aprobadas en otras instituciones (universidades estatales o privadas, nacionales o extranjeras) para que sean consideradas como parte del plan de estudios de la carrera actual. Para esto, se deben cumplir ciertos requisitos y condiciones, como que las asignaturas sean equivalentes en extensión y enfoque. (Fuente: Reglamento de Equivalencias de Asignaturas)",
+        "sources_used": [
+            "Resolucion_080-12_CS-Reglamento_de_Alumnos.pdf",
+            "reglamento-equivalencias.pdf"
+        ],
+        "expected_source": [
+            "Resolucion_080-12_CS-Reglamento_de_Alumnos.pdf",
+            "reglamento-equivalencias.pdf"
+        ],
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "passed": true
+    },
+    {
+        "question": "¿Que diferencia hay entre sacar una beca de comedor y un ticket de comedor?",
+        "answer": "La principal diferencia entre una beca de comedor y un ticket de comedor radica en la naturaleza y los requisitos de cada uno:\n\n1. **Beca de Comedor**: \n   - Consiste en la entrega de un almuerzo diario de lunes a viernes, exceptuando los feriados. \n   - Los requisitos incluyen ser nacional argentino o residente en Argentina, ser alumno regular de la institución, no poseer otro tipo de beca académica, y tener un ingreso familiar menor al Salario Mínimo Vital y Móvil (Reglamento de Becas de Comedor, ARTÍCULO N°5 y N°6).\n\n2. **Ticket de Comedor**: \n   - Permite a los estudiantes acceder a descuentos en la compra de un almuerzo diario, también de lunes a viernes, exceptuando feriados y asuetos. \n   - Los requisitos incluyen ser argentino nativo o naturalizado con DNI, presentar un certificado de alumno regular, estar inscripto en una carrera de la universidad, y haber cumplido con las condiciones de admisión (Procedimiento de Compra de Tickets de Comedor, ARTÍCULO 4). \n\nEn resumen, la beca de comedor proporciona un almuerzo gratuito, mientras que el ticket de comedor ofrece un descuento en la compra de un almuerzo.",
+        "sources_used": [
+            "Becas_de_Comedor.pdf",
+            "Tickets_de_comedor.pdf"
+        ],
+        "expected_source": [
+            "Becas_de_Comedor.pdf",
+            "Tickets_de_comedor.pdf"
+        ],
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "passed": true
+    },
+    {
+        "question": "Tengo que pagar para dejar la moto en el estacionamiento de la facultad?",
+        "answer": "No se encontró información específica sobre el pago para estacionar motos en la facultad en el contexto recuperado.",
+        "sources_used": [
+            "Resolucion_080-12_CS-Reglamento_de_Alumnos.pdf",
+            "Tickets_de_comedor.pdf"
+        ],
+        "expected_source": null,
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "passed": true
+    }
+]

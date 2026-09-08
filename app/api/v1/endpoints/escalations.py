@@ -60,9 +60,7 @@ async def get_escalation(ticket_id: UUID, service: EscalationServiceDep) -> Esca
     description="Permite a un operador o sistema externo registrar manualmente un ticket de derivación institucional.",
     response_description="Ticket de escalamiento creado y persistido.",
 )
-async def create_escalation(
-    payload: EscalationTicketCreate, service: EscalationServiceDep
-) -> EscalationTicketResponse:
+async def create_escalation(payload: EscalationTicketCreate, service: EscalationServiceDep) -> EscalationTicketResponse:
     return await service.create_ticket(
         thread_id=payload.thread_id,
         original_question=payload.original_question,

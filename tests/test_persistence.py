@@ -4,7 +4,6 @@ reiniciar un contenedor de verdad, que seria un test mas caro y fragil sin
 ganar cobertura real) y se confirma que el thread_id sigue resolviendo el
 historial acumulado."""
 
-
 import pytest
 
 from app.agents.graph import build_graph

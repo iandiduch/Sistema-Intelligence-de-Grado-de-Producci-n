@@ -24,9 +24,7 @@ class IngestionJob(Base):
     __tablename__ = "ingestion_jobs"
     __table_args__ = (
         CheckConstraint("file_type IN ('pdf','docx','txt','md')", name="ck_ingestion_jobs_file_type"),
-        CheckConstraint(
-            "status IN ('PENDING','PROCESSING','COMPLETED','FAILED')", name="ck_ingestion_jobs_status"
-        ),
+        CheckConstraint("status IN ('PENDING','PROCESSING','COMPLETED','FAILED')", name="ck_ingestion_jobs_status"),
         Index("ix_ingestion_jobs_status", "status"),
         Index("ix_ingestion_jobs_created_at", "created_at"),
     )
@@ -43,7 +41,9 @@ class IngestionJob(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class EscalationTicket(Base):
@@ -76,7 +76,9 @@ class EscalationTicket(Base):
     resolution_notes: Mapped[str | None] = mapped_column(default=None)
     resolved_by: Mapped[str | None] = mapped_column(default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
 
@@ -86,7 +88,9 @@ class AgentPrompt(Base):
     agent_id: Mapped[str] = mapped_column(primary_key=True)
     content: Mapped[str]
     version: Mapped[int] = mapped_column(default=1)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
     updated_by: Mapped[str | None] = mapped_column(default=None)
 
 

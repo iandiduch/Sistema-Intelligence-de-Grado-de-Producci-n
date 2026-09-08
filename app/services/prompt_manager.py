@@ -66,7 +66,12 @@ class PromptManager:
             for path in sorted(defaults_dir.glob("*.md")):
                 stmt = (
                     pg_insert(AgentPrompt)
-                    .values(agent_id=path.stem, content=path.read_text(encoding="utf-8"), version=1, updated_by="system_seed")
+                    .values(
+                        agent_id=path.stem,
+                        content=path.read_text(encoding="utf-8"),
+                        version=1,
+                        updated_by="system_seed",
+                    )
                     .on_conflict_do_nothing(index_elements=["agent_id"])
                 )
                 await session.execute(stmt)

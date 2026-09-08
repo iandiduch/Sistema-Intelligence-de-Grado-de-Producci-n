@@ -54,9 +54,7 @@ async def academic_agent_node(state: MultiAgentState, config: RunnableConfig) ->
             )
         except Exception as exc:  # noqa: BLE001 - Fallback si el LLM de síntesis falla
             logger.error("academic_agent.llm_failed", extra={"thread_id": state["thread_id"], "error": str(exc)})
-            output = AcademicAgentOutput(
-                respuesta="No pude resolver la consulta academica en este momento.", datos={}
-            )
+            output = AcademicAgentOutput(respuesta="No pude resolver la consulta academica en este momento.", datos={})
 
     return {
         "academic_result": output,

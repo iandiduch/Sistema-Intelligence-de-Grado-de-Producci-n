@@ -17,7 +17,8 @@ from pathlib import Path
 from uuid import UUID
 
 from redis.asyncio import Redis
-from redis.exceptions import ConnectionError as RedisConnectionError, TimeoutError as RedisTimeoutError
+from redis.exceptions import ConnectionError as RedisConnectionError
+from redis.exceptions import TimeoutError as RedisTimeoutError
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -155,9 +156,7 @@ async def recover_orphaned_jobs(
             if job.retry_count < settings.INGESTION_MAX_RETRIES:
                 job.status = TaskStatus.PENDING.value
                 job.retry_count += 1
-                job.error_message = (
-                    f"Reintentando job huérfano tras timeout (intento {job.retry_count}/{settings.INGESTION_MAX_RETRIES})"
-                )
+                job.error_message = f"Reintentando job huérfano tras timeout (intento {job.retry_count}/{settings.INGESTION_MAX_RETRIES})"
                 await session.flush()
                 await redis.rpush(settings.REDIS_INGEST_QUEUE_KEY, str(job.job_id))
                 logger.warning(

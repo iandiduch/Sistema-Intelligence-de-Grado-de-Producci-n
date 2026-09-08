@@ -52,7 +52,9 @@ async def test_require_scope_admin_key_passes_admin_and_client_checks():
     admin_key = ApiKey(key_id=uuid4(), scope=ApiKeyScope.ADMIN.value, name="test-admin")
     fake_request = MagicMock()
 
-    result_client = await require_scope(ApiKeyScope.CLIENT)(request=fake_request, key_record=admin_key, settings=settings)
+    result_client = await require_scope(ApiKeyScope.CLIENT)(
+        request=fake_request, key_record=admin_key, settings=settings
+    )
     result_admin = await require_scope(ApiKeyScope.ADMIN)(request=fake_request, key_record=admin_key, settings=settings)
 
     assert result_client is admin_key

@@ -52,9 +52,7 @@ def _load_golden_set() -> list[GoldenSetItem]:
         return []
     raw = json.loads(_GOLDEN_SET_PATH.read_text(encoding="utf-8"))
     items = [GoldenSetItem(**item) for item in raw]
-    real_items = [
-        i for i in items if not i.question.strip().upper().startswith(("PLACEHOLDER", "[PLACEHOLDER]"))
-    ]
+    real_items = [i for i in items if not i.question.strip().upper().startswith(("PLACEHOLDER", "[PLACEHOLDER]"))]
     skipped = len(items) - len(real_items)
     if skipped:
         logger.warning("evaluate_rag.skipping_placeholders", extra={"count": skipped})

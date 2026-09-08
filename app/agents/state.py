@@ -20,17 +20,11 @@ from app.schemas.agents import (
 )
 
 
-def _keep_first(existing: str | None, new: str | None) -> str | None:
-    """Reducer para original_question: el primer valor no vacio que llega
-    en un thread queda pegado -- turnos siguientes (ej. cuando el usuario
-    solo esta compartiendo su contacto para HOTL) no lo pisan."""
-    return existing if existing else new
-
-
 class MultiAgentState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     thread_id: str
-    original_question: Annotated[str, _keep_first]
+    original_question: str
+    escalation_question: str | None
     next_agent: str | None
     knowledge_result: KnowledgeAgentOutput | None
     academic_result: AcademicAgentOutput | None
