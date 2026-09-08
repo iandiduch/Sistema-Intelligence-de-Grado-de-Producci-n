@@ -78,11 +78,76 @@ El span implementado en `app/core/tracing_utils.py` mediante `hotl_escalation_sp
 
 ---
 
+---
+
+## 4. Prueba E2E · RAG Institucional (Knowledge Agent)
+
+![Traza de RAG Institucional](04_trace_rag_knowledge.png)
+
+* **Archivo:** [`04_trace_rag_knowledge.png`](04_trace_rag_knowledge.png)
+* **Consulta Evaluada:** *"¿Cuál es el máximo de materias que se pueden aprobar por equivalencia?"*
+* **Trace ID:** `e0e35be204c2733f22e1759f744f014a`
+* **Estado:** `OK` | **Latencia:** `5.7 s` | **Costo:** `<$0.01`
+* **Tokens Totales:** ~4,295 tokens (`supervisor: 695`, `knowledge_agent: 2,778`, `validator: 822`)
+
+### Desglose del Árbol de Spans:
+1. **`supervisor`:** Clasifica la consulta con Structured Output (`SupervisorDecision`), ruteando a `knowledge_agent`.
+2. **`route_from_supervisor`:** Condicional de arista ejecutado en <1 ms.
+3. **`knowledge_agent`:**
+   * Ejecuta `buscar_conocimiento_institucional` sobre el RAG híbrido (Pinecone + PostgreSQL FTS).
+   * Genera la respuesta citando la normativa de equivalencias (`reglamento-equivalencias.pdf`).
+4. **`validator`:** Audita suficiencia y veracidad (`es_suficiente: true`), sintetizando la respuesta final del 50%.
+5. **`route_from_validator`:** Concluye exitosamente en `__end__`.
+
+---
+
+## 5. Prueba E2E · Operación Académica con Tool Calling (Academic Agent)
+
+![Traza de Tool Calling Académico](05_trace_academic_tools.png)
+
+* **Archivo:** [`05_trace_academic_tools.png`](05_trace_academic_tools.png)
+* **Consulta Evaluada:** *"¿Cuáles son los horarios de cursada para Farmacia de la materia Química General?"*
+* **Trace ID:** `d4cf667214246f83`
+* **Estado:** `OK` | **Latencia:** `8.5 s` | **Costo:** `<$0.01`
+* **Tokens Totales:** ~2,818 tokens (`supervisor: 853`, `tool_binding: 424`, `academic_synthesis: 610`, `validator: 931`)
+
+### Desglose del Árbol de Spans:
+1. **`supervisor`:** Rutea la consulta a `academic_agent` al detectar una necesidad operativa de cursada.
+2. **`academic_agent`:**
+   * Invoca `ChatOpenAI` con `bind_tools` tipado.
+   * Ejecuta la herramienta determinista `consultar_horarios` con argumentos: `{carrera: "Farmacia", materia: "Química General"}`.
+   * Procesa los datos devueltos por la tool y sintetiza la comisión C3 (Martes 10:00 a 19:00).
+3. **`validator`:** Valida que la respuesta responde con exactitud los datos solicitados y finaliza en `__end__`.
+
+---
+
+## 6. Prueba E2E · Consulta Reglamentaria con Plazos Generales (Knowledge Agent)
+
+![Traza de Consulta Reglamentaria](06_trace_rag_deadlines.png)
+
+* **Archivo:** [`06_trace_rag_deadlines.png`](06_trace_rag_deadlines.png)
+* **Consulta Evaluada:** *"¿Hasta qué edad máxima puedo entrar a estudiar?"*
+* **Trace ID:** `80dd2708bb5c42c47f6f54e02df3e06c`
+* **Estado:** `OK` | **Latencia:** `5.9 s` | **Costo:** `<$0.01`
+* **Tokens Totales:** ~4,250 tokens (`supervisor: 696`, `knowledge_agent: 2,651`, `validator: 903`)
+
+### Desglose del Árbol de Spans:
+1. **`supervisor`:** Rutea hacia `knowledge_agent`.
+2. **`knowledge_agent`:**
+   * Recupera fragmentos de la `Resolución 080-12 CS` (Artículo 3).
+   * Determina que no existe límite superior de edad y especifica la excepción para mayores de 25 años sin secundario completo.
+3. **`validator`:** Confirma que el contexto documental respalda la respuesta y emite la respuesta final verificada.
+
+---
+
 ## Resumen de Archivos en este Directorio
 
-| Archivo | Dimensión | Descripción |
-| :--- | :--- | :--- |
-| [`01_phoenix_traces_langgraph.png`](01_phoenix_traces_langgraph.png) | 138 KB | Cascada completa de spans del grafo LangGraph (Supervisor, RAG y Validador). |
-| [`02_phoenix_metrics_tokens_latency.png`](02_phoenix_metrics_tokens_latency.png) | 98 KB | Dashboard general con gráficos de latencia percentilada, volumen y costos. |
-| [`03_phoenix_hotl_escalation.png`](03_phoenix_hotl_escalation.png) | 111 KB | Detalle de atributos de negocio OpenTelemetry en un span de derivación HOTL. |
+| Archivo | Tamaño | Tipo de Evidencia | Consulta / Operación Evaluada |
+| :--- | :--- | :--- | :--- |
+| [`01_phoenix_traces_langgraph.png`](01_phoenix_traces_langgraph.png) | 138 KB | Cascada LangGraph | Equivalencias de materias (Visión de árbol completa). |
+| [`02_phoenix_metrics_tokens_latency.png`](02_phoenix_metrics_tokens_latency.png) | 98 KB | Dashboard General | Métricas percentiladas (p50/p95), tokens y costos acumulados. |
+| [`03_phoenix_hotl_escalation.png`](03_phoenix_hotl_escalation.png) | 111 KB | Span HOTL | Atributos OpenTelemetry en ticket de escalamiento humano. |
+| [`04_trace_rag_knowledge.png`](04_trace_rag_knowledge.png) | 130 KB | Traza E2E #1 | RAG Institucional Puro (`knowledge_agent` -> `validator`). |
+| [`05_trace_academic_tools.png`](05_trace_academic_tools.png) | 135 KB | Traza E2E #2 | Tool Calling Académico (`academic_agent` -> `consultar_horarios`). |
+| [`06_trace_rag_deadlines.png`](06_trace_rag_deadlines.png) | 146 KB | Traza E2E #3 | Normativa con Plazos y Excepciones (Art. 3 Reglamento Alumnos). |
 

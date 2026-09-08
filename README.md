@@ -53,6 +53,7 @@ flowchart LR
 
         SUP -->|Rutea consulta| KNOW[Agente · Conocimiento Institucional]
         SUP -->|Rutea consulta| ACAD[Agente · Operaciones Académicas]
+        SUP -.->|Pide humano / Excepción| HOTL[Nodo HOTL Escalation]
         SUP -.->|Saludo / Cierre| END_DIRECT([END · Respuesta directa])
 
         %% Optimización directa: Agentes especialistas directo al Validador
@@ -62,7 +63,10 @@ flowchart LR
         %% Decisiones del Validador
         VAL -->|Resuelto · es_suficiente| END_OK([END · Respuesta Sintetizada])
         VAL -->|Requiere más info · ciclo| SUP
-        VAL -->|No resuelto / excepción| HOTL[Nodo HOTL Escalation]
+        VAL -->|No resuelto / excepción| HOTL
+
+        %% Transición de escape HOTL por lenguaje natural
+        HOTL -.->|Cambio de tema / new_query| SUP
 
         GRAPH <-->|Checkpoints de estado| CP[(PostgreSQL<br/>AsyncPostgresSaver)]
     end
@@ -94,7 +98,8 @@ flowchart LR
 
         HOTL -->|1er turno| WAIT([END · Solicitar Email / WhatsApp])
 
-        HOTL -->|2do turno| STORE[(PostgreSQL<br/>escalation_tickets)]
+        HOTL -->|2do turno · contacto provisto| STORE[(PostgreSQL<br/>escalation_tickets)]
+        HOTL -->|2do turno · rechazo| DECLINE([END · Cancelación amigable])
 
         STORE --> NOTIFY[HOTL Notification Service]
 
