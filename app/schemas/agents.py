@@ -10,11 +10,19 @@ from app.domain.models import ConfidenceLevel, ContactChannel, EscalationType
 
 
 class SupervisorDecision(BaseModel):
-    next_agent: Literal["knowledge_agent", "academic_agent", "validator", "escalation_agent", "__end__"]
+    next_agent: Literal["knowledge_agent", "academic_agent", "validator", "escalation_agent", "__end__"] = Field(
+        ...,
+        description=(
+            "Agente seleccionado: 'knowledge_agent' para trámites, normativas, pagos, cursos o dudas generales; "
+            "'academic_agent' para horarios/aulas/matriculación de cursadas; "
+            "'escalation_agent' si pide un humano; "
+            "'__end__' EXCLUSIVAMENTE para saludos o despedidas sin preguntas."
+        ),
+    )
     reasoning: str = Field(..., description="Motivo breve de la decision de ruteo")
     direct_reply: str | None = Field(
         default=None,
-        description="Solo si next_agent es __end__: respuesta breve para saludos o cierre de charla, sin logica de negocio",
+        description="Solo si next_agent es __end__: saludo cordial o despedida. NUNCA responder preguntas ni decir que no se tiene info aquí.",
     )
 
 
