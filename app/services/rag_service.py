@@ -6,6 +6,7 @@ distribuida en PostgreSQL (Full-Text Search con tsvector/plainto_tsquery y ts_ra
 permitiendo escalabilidad horizontal sin requerir memoria en cada instancia de API.
 """
 
+import asyncio
 import logging
 from typing import Any
 
@@ -175,8 +176,10 @@ async def hybrid_search(
         return await semantic_search(query, top_k, index, embeddings_client, metadata_filter)
 
     candidate_k = top_k * settings.HYBRID_CANDIDATE_MULTIPLIER
-    vector_results = await semantic_search(query, candidate_k, index, embeddings_client, metadata_filter)
-    fts_raw = await lexical_search_postgres(query, candidate_k, sessionmaker, metadata_filter)
+    vector_results, fts_raw = await asyncio.gather(
+        semantic_search(query, candidate_k, index, embeddings_client, metadata_filter),
+        lexical_search_postgres(query, candidate_k, sessionmaker, metadata_filter),
+    )
 
     max_fts = max((score for _, score in fts_raw), default=0.0)
 

@@ -113,3 +113,20 @@ async def test_rate_limiter_allows_under_limit_and_blocks_over(test_settings):
     assert blocked.retry_after_seconds == 60
 
     await redis.aclose()
+
+
+@pytest.mark.asyncio
+async def test_rate_limiter_fail_open_on_redis_error():
+    from unittest.mock import AsyncMock
+
+    from redis.exceptions import ConnectionError as RedisConnError
+
+    mock_redis = AsyncMock()
+    mock_redis.evalsha = AsyncMock(side_effect=RedisConnError("Redis down"))
+    limiter = RateLimiter(mock_redis)
+    limiter._script_sha = "fake_sha"
+
+    result = await limiter.check("test-identity", limit=10, window_seconds=60)
+    assert result.allowed is True
+    assert result.retry_after_seconds == 0
+

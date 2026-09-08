@@ -91,10 +91,15 @@ async def chat_stream(
     async def event_source():
         try:
             async for chunk, metadata in graph.astream(graph_input, config=config, stream_mode="messages"):
+                node_name = metadata.get("langgraph_node") if isinstance(metadata, dict) else None
+                # Los agentes especialistas (knowledge_agent, academic_agent) producen borradores
+                # intermedios que luego son sintetizados y validados por el Validador o derivados
+                # al agente de escalamiento. No deben transmitirse directamente al cliente.
+                if node_name in ("knowledge_agent", "academic_agent"):
+                    continue
                 content = getattr(chunk, "content", None)
                 if not content:
                     continue
-                node_name = metadata.get("langgraph_node") if isinstance(metadata, dict) else None
                 stream_chunk = StreamChunk(thread_id=thread_id, delta=str(content), agent=_safe_agent(node_name))
                 yield f"data: {stream_chunk.model_dump_json()}\n\n"
             yield f"data: {StreamChunk(thread_id=thread_id, delta='', done=True).model_dump_json()}\n\n"

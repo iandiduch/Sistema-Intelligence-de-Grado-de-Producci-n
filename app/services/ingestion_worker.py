@@ -248,6 +248,15 @@ async def _process_job(
         INGESTION_JOBS_TOTAL.labels(status=TaskStatus.FAILED.value, file_type=job.file_type).inc()
         logger.error("ingestion_worker.job_failed", extra={"job_id": str(job_id), "error": str(exc)})
 
+    except Exception as exc:  # noqa: BLE001 - Resguardo ante fallos imprevistos para no derribar el proceso worker
+        job.status = TaskStatus.FAILED.value
+        job.error_message = f"Error inesperado durante la ingesta: {exc}"
+        job.completed_at = datetime.now(UTC)
+        await session.commit()
+
+        INGESTION_JOBS_TOTAL.labels(status=TaskStatus.FAILED.value, file_type=job.file_type).inc()
+        logger.exception("ingestion_worker.unexpected_job_failure", extra={"job_id": str(job_id), "error": str(exc)})
+
 
 def _to_document_chunks(chunks: list[ChunkWithMetadata]) -> list[DocumentChunk]:
     """Copia el texto y metadatos de cada chunk en PostgreSQL para el Full-Text Search."""

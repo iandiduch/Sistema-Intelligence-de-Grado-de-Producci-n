@@ -63,6 +63,7 @@ async def escalation_agent_node(state: MultiAgentState, config: RunnableConfig) 
         return {
             "escalation_contact_pending": False,
             "escalation_question": None,
+            "validation_result": None,
             "final_answer": decline_message,
             "messages": [AIMessage(content=decline_message, name=AgentRole.ESCALATION.value)],
         }
@@ -102,6 +103,7 @@ async def escalation_agent_node(state: MultiAgentState, config: RunnableConfig) 
         "escalation_ticket_id": str(ticket.ticket_id),
         "escalation_contact_pending": False,
         "escalation_question": None,
+        "validation_result": None,
         "final_answer": confirmation,
         "messages": [AIMessage(content=confirmation, name=AgentRole.ESCALATION.value)],
     }

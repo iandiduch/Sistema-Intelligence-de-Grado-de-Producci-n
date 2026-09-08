@@ -3,11 +3,14 @@ atomico (evita la condicion de carrera de leer/decidir/incrementar por
 separado). No se uso slowapi (bloquea el event loop) ni fastapi-limiter
 (mantenimiento esporadico)."""
 
+import logging
 import time
 from dataclasses import dataclass
 
 from redis.asyncio import Redis
-from redis.exceptions import NoScriptError
+from redis.exceptions import NoScriptError, RedisError
+
+logger = logging.getLogger(__name__)
 
 # KEYS[1] = clave de la ventana actual, KEYS[2] = clave de la ventana anterior
 # ARGV[1] = tamano de ventana en segundos, ARGV[2] = limite, ARGV[3] = timestamp unix actual
@@ -70,5 +73,9 @@ class RateLimiter:
                 _SLIDING_WINDOW_SCRIPT, 2, current_key, previous_key, window_seconds, limit, now
             )
             self._script_sha = await self._redis.script_load(_SLIDING_WINDOW_SCRIPT)
+        except (RedisError, ConnectionError, OSError) as exc:
+            # Si Redis cae temporalmente, fail-open para mantener alta disponibilidad
+            logger.warning("rate_limiter.redis_unavailable_fail_open", extra={"identity": identity, "error": str(exc)})
+            return RateLimitResult(allowed=True, retry_after_seconds=0)
 
         return RateLimitResult(allowed=bool(int(allowed)), retry_after_seconds=0 if allowed else window_seconds)
