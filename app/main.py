@@ -120,6 +120,11 @@ async def lifespan(app: FastAPI):
     logger.info("lifespan.shutdown_complete")
 
 
+_settings = get_settings()
+_docs_enabled = (
+    _settings.DOCS_ENABLED if _settings.DOCS_ENABLED is not None else (_settings.ENVIRONMENT != "production")
+)
+
 app = FastAPI(
     title="Sistema de Inteligencia Universitario",
     description="""## Plataforma de Inteligencia Artificial para el Ámbito Universitario e Institucional
@@ -133,9 +138,9 @@ Sistema de grado de producción que integra:
 * **Observabilidad Integral**: Trazabilidad con OpenTelemetry, OpenInference, Arize Phoenix y métricas Prometheus.
 """,
     version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/api/v1/openapi.json",
+    docs_url="/docs" if _docs_enabled else None,
+    redoc_url="/redoc" if _docs_enabled else None,
+    openapi_url="/api/v1/openapi.json" if _docs_enabled else None,
     openapi_tags=[
         {
             "name": "chat",

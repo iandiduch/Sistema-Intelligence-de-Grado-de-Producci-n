@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: Literal["local", "docker", "production"] = "local"
     LOG_LEVEL: str = "INFO"
     CORS_ORIGINS: list[str] = ["*"]
+    DOCS_ENABLED: bool | None = None
 
     # --- OpenAI ---
     OPENAI_API_KEY: SecretStr = Field(
