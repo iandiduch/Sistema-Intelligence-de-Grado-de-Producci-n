@@ -3,7 +3,9 @@ from pydantic import BaseModel, Field
 
 class GoldenSetItem(BaseModel):
     question: str
-    expected_source: str | None = Field(default=None, description="Filename esperado entre las fuentes citadas")
+    expected_source: str | list[str] | None = Field(
+        default=None, description="Filename o lista de filenames esperados entre las fuentes citadas"
+    )
     expected_answer_contains: str | None = Field(
         default=None, description="Fragmento que la respuesta deberia mencionar, si aplica"
     )
@@ -22,6 +24,7 @@ class EvaluationResult(BaseModel):
     question: str
     answer: str
     sources_used: list[str]
+    expected_source: str | list[str] | None = None
     faithfulness: float
     relevance: float
     passed: bool

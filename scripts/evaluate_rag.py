@@ -129,6 +129,7 @@ async def main() -> None:
                     question=item.question,
                     answer=answer,
                     sources_used=sources,
+                    expected_source=item.expected_source,
                     faithfulness=judgment.faithfulness,
                     relevance=judgment.relevance,
                     passed=passed,

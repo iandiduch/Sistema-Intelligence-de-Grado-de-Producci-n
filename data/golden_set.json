@@ -1,12 +1,58 @@
 [
   {
-    "question": "PLACEHOLDER: reemplazar por una pregunta real sobre un documento ya ingestado, ej. '¿Cuando cierra la inscripcion a materias del primer cuatrimestre?'",
-    "expected_source": "PLACEHOLDER: nombre exacto del archivo del que deberia salir la respuesta, ej. 'reglamento_academico.pdf'",
+    "question": "¿Cuales son los pasos para realizar la baja de matricula de un alumno?",
+    "expected_source": "reglamento-academico-alumnos.pdf",
     "expected_answer_contains": null
   },
   {
-    "question": "PLACEHOLDER: otra pregunta real, ej. '¿Cuales son los requisitos para rendir final libre?'",
+    "question": "¿Cual es el maximo de materias que se pueden aprobar por equivalencia?",
+    "expected_source": "reglamento-equivalencias.pdf",
+    "expected_answer_contains": "50%"
+  },
+  {
+    "question": "¿Cuanto tardan en aprobar una beca de comedor?",
+    "expected_source": "Becas_de_Comedor.pdf",
+    "expected_answer_contains": "7 días"
+  },
+  {
+    "question": "¿Que tengo que hacer para inscribirme a una carrera online?",
+    "expected_source": "anexo procedimiento inscripcion online carreras.pdf",
+    "expected_answer_contains": null
+  },
+  {
+    "question": "¿Por quien estan integrados los departamentos?",
+    "expected_source": "ESTATUTO_UNCAUS.pdf",
+    "expected_answer_contains": null
+  },
+  {
+    "question": "¿Hasta que edad maxima puedo entrar a estudiar?",
+    "expected_source": "Resolucion_080-12_CS-Reglamento_de_Alumnos.pdf",
+    "expected_answer_contains": "25 años"
+  },
+  {
+    "question": "¿Cuantas carreras a la vez puedo estudiar?",
+    "expected_source": "Resolucion_080-12_CS-Reglamento_de_Alumnos.pdf",
+    "expected_answer_contains": "2"
+  },
+  {
+    "question": "¿Que diferencia hay entre ser alumno regular y hacer equivalencias?",
+    "expected_source": [
+      "Resolucion_080-12_CS-Reglamento_de_Alumnos.pdf",
+      "reglamento-equivalencias.pdf"
+    ],
+    "expected_answer_contains": null
+  },
+  {
+    "question": "¿Que diferencia hay entre sacar una beca de comedor y un ticket de comedor?",
+    "expected_source": [
+      "Becas_de_Comedor.pdf",
+      "Tickets_de_comedor.pdf"
+    ],
+    "expected_answer_contains": null
+  },
+  {
+    "question": "Tengo que pagar para dejar la moto en el estacionamiento de la facultad?",
     "expected_source": null,
-    "expected_answer_contains": "PLACEHOLDER: fragmento que la respuesta deberia mencionar, ej. 'promedio minimo'"
+    "expected_answer_contains": null
   }
 ]
