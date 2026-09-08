@@ -52,14 +52,15 @@ async def create_ingestion_job(
         status=TaskStatus.PENDING.value,
     )
     db.add(job)
-    await db.flush()
+    await db.commit()
+    await db.refresh(job)
 
     try:
         await redis.rpush(settings.REDIS_INGEST_QUEUE_KEY, str(job_id))
     except Exception as exc:  # noqa: BLE001 - Si falla el broker Redis, se actualiza el estado del job a FAILED
         job.status = TaskStatus.FAILED.value
         job.error_message = f"No se pudo encolar el job de ingesta: {exc}"
-        await db.flush()
+        await db.commit()
         logger.error("ingestion_service.enqueue_failed", extra={"job_id": str(job_id), "error": str(exc)})
 
     return job

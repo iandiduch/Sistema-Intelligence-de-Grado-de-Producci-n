@@ -18,7 +18,7 @@ from uuid import UUID
 
 from redis.asyncio import Redis
 from redis.exceptions import ConnectionError as RedisConnectionError, TimeoutError as RedisTimeoutError
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.config import Settings, get_settings
@@ -137,8 +137,16 @@ async def recover_orphaned_jobs(
 
     async with sessionmaker() as session:
         stmt = select(IngestionJob).where(
-            IngestionJob.status == TaskStatus.PROCESSING.value,
-            IngestionJob.started_at < cutoff,
+            or_(
+                and_(
+                    IngestionJob.status == TaskStatus.PROCESSING.value,
+                    IngestionJob.started_at < cutoff,
+                ),
+                and_(
+                    IngestionJob.status == TaskStatus.PENDING.value,
+                    IngestionJob.created_at < cutoff,
+                ),
+            )
         )
         result = await session.execute(stmt)
         orphaned_jobs = list(result.scalars().all())
@@ -185,8 +193,16 @@ async def _process_job(
 ) -> None:
     job = await session.get(IngestionJob, job_id)
     if job is None:
-        logger.error("ingestion_worker.job_not_found", extra={"job_id": str(job_id)})
-        return
+        # Reintento breve con backoff para absorber cualquier latencia de commit entre procesos
+        for attempt in range(3):
+            await asyncio.sleep(0.5 * (attempt + 1))
+            session.expire_all()
+            job = await session.get(IngestionJob, job_id)
+            if job is not None:
+                break
+        if job is None:
+            logger.error("ingestion_worker.job_not_found", extra={"job_id": str(job_id)})
+            return
 
     job.status = TaskStatus.PROCESSING.value
     job.started_at = datetime.now(UTC)
