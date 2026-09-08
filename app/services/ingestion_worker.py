@@ -19,7 +19,7 @@ from uuid import UUID
 from redis.asyncio import Redis
 from redis.exceptions import ConnectionError as RedisConnectionError
 from redis.exceptions import TimeoutError as RedisTimeoutError
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.config import Settings, get_settings
@@ -226,6 +226,25 @@ async def _process_job(
         chunks = build_chunks(pages, job_id, job.filename, file_type, settings)
         if not chunks:
             raise DocumentParsingError(f"El documento {job.filename} no produjo contenido indexable")
+
+        # Purga chunks y vectores anteriores si el documento ya se habia indexado previamente
+        stmt_prev = select(DocumentChunk.chunk_id).where(DocumentChunk.filename == job.filename)
+        prev_chunk_ids = list((await session.execute(stmt_prev)).scalars().all())
+        if prev_chunk_ids:
+            try:
+                for i in range(0, len(prev_chunk_ids), 1000):
+                    await index.delete(ids=prev_chunk_ids[i : i + 1000])
+                logger.info(
+                    "ingestion_worker.purged_previous_vectors",
+                    extra={"filename": job.filename, "purged_chunks": len(prev_chunk_ids)},
+                )
+            except Exception as exc:  # noqa: BLE001 - Resguardo de resiliencia ante fallos de borrado en Pinecone
+                logger.warning(
+                    "ingestion_worker.delete_previous_pinecone_vectors_failed",
+                    extra={"filename": job.filename, "error": str(exc)},
+                )
+            await session.execute(delete(DocumentChunk).where(DocumentChunk.filename == job.filename))
+            await session.flush()
 
         embeddings = await embed_texts([c.text for c in chunks], embeddings_client)
         chunks_indexed = await upsert_chunks(index, chunks, embeddings, settings)
